@@ -3,6 +3,8 @@ import requests
 import random
 import re
 import json
+from PIL import Image
+import encoder
 
 
 user_agents = ['Mozilla/5.0 (compatible; FacebookBot/1.0; +https://developers.facebook.com/docs/sharing/webmasters/facebookbot/)',
@@ -14,6 +16,7 @@ user_agents = ['Mozilla/5.0 (compatible; FacebookBot/1.0; +https://developers.fa
                'facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)']
 
 musinsa_url = "https://global.musinsa.com/us/goods/4234208"
+
 
 def get_num_pages():
     url = f"https://global.musinsa.com/us/category/clothing?page=1"
@@ -31,7 +34,8 @@ def get_num_pages():
         if match:
             json_str = match.group(1)
             data = json.loads(json_str)
-            return(data["totalCount"]/100 +1)
+            return (data["totalCount"]/100 + 1)
+
 
 def get_page_info(page_num=1):
     url = f"https://global.musinsa.com/us/category/clothing?page={page_num}"
@@ -52,7 +56,7 @@ def get_page_info(page_num=1):
             try:
                 data = json.loads(json_str)
                 goods_info_list = data["goodsInfoList"]
-                prod_dict_list =[]
+                prod_dict_list = []
                 for goods_dict in goods_info_list:
                     prod_dict = {
                         "prod_num": goods_dict["goodsNo"],
@@ -71,6 +75,34 @@ def get_page_info(page_num=1):
     else:
         print(f"No relevant <script> tag found on page {page_num}.")
 
+
+prod_list_100 = get_page_info(1)
+for prod in prod_list_100:
+    prod_num = prod["prod_num"]
+    image_url = prod["image_URL"]
+    image = Image.open(requests.get(image_url, headers={
+        'User-Agent': random.choice(user_agents)}, stream=True).raw)
+
+'''
+
+    try:
+        response = requests.get(image_url, headers={
+            'User-Agent': random.choice(user_agents)})
+        response.raise_for_status()
+        with open(f"data/images/{prod_num}.jpg", "wb") as f:
+            f.write(response.content)
+        prod["image_local_path"] = f"data/images/{prod_num}.jpg"
+
+    except Exception as e:
+        print(f"Failed to download {image_url}: {e}")
+        prod["image_local_path"] = None
+
+with open("data/metadata.json", "w") as f:
+    json.dump(prod_list_100, f, indent=2)
+'''
+
+
+'''
 MAX_PAGES = 10
 def main():
     all_pages_data = []
@@ -82,3 +114,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+'''
