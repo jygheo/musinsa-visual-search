@@ -3,7 +3,7 @@ import torch
 from PIL import Image
 import numpy as np
 import requests
-from user_agents import user_agents
+from config.user_agents import USER_AGENTS
 import random
 
 model = AutoModelForZeroShotImageClassification.from_pretrained(
@@ -13,7 +13,7 @@ processor = AutoProcessor.from_pretrained("patrickjohncyh/fashion-clip")
 
 def encode_image(image_url: str) -> np.ndarray:
     image = Image.open(requests.get(image_url, headers={
-        'User-Agent': random.choice(user_agents)}, stream=True).raw)
+        'User-Agent': random.choice(USER_AGENTS)}, stream=True).raw)
     inputs = processor(images=image, return_tensors='pt')
     with torch.no_grad():
         return model.get_image_features(**inputs).squeeze(0).numpy()

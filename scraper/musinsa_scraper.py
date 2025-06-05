@@ -3,13 +3,15 @@ import requests
 import random
 import re
 import json
-from user_agents import user_agents
+from config.user_agents import USER_AGENTS
 from datetime import datetime, timezone
+
+# TODO: use https://global.musinsa.com/us/category/clothing?page=1&sortCode=NEW (avoid duplicates)
 
 def get_num_pages():
     url = f"https://global.musinsa.com/us/category/clothing?page=1"
     response = requests.get(url, headers={
-        'User-Agent': random.choice(user_agents)})
+        'User-Agent': random.choice(USER_AGENTS)})
     soup = BeautifulSoup(response.content, "html.parser")
     script_text = None
     for script in soup.find_all("script"):
@@ -28,7 +30,7 @@ def get_num_pages():
 def get_page_info(page_num=1):
     url = f"https://global.musinsa.com/us/category/clothing?page={page_num}"
     response = requests.get(url, headers={
-        'User-Agent': random.choice(user_agents)})
+        'User-Agent': random.choice(USER_AGENTS)})
 
     soup = BeautifulSoup(response.content, "html.parser")
     script_text = None
@@ -50,9 +52,9 @@ def get_page_info(page_num=1):
                         "prod_num": goods_dict["goodsNo"],
                         "prod_name": goods_dict["goodsName"],
                         "brand_name": goods_dict["brandName"],
-                        "image_URL": "https:"+goods_dict["imageUrl"],
+                        "image_url": "https:"+goods_dict["imageUrl"],
                         "price": goods_dict["price"],
-                        "prod_URL": f"https://global.musinsa.com/us/goods/{goods_dict["goodsNo"]}"
+                        "prod_url": f"https://global.musinsa.com/us/goods/{goods_dict["goodsNo"]}"
                     }
                     prod_dict_list.append(prod_dict)
                 return prod_dict_list
@@ -67,10 +69,10 @@ def get_page_info(page_num=1):
 '''
 for prod in prod_list_100:
     prod_num = prod["prod_num"]
-    image_url = prod["image_URL"]
+    image_url = prod["image_url"]
     try:
         response = requests.get(image_url, headers={
-            'User-Agent': random.choice(user_agents)})
+            'User-Agent': random.choice(USER_AGENTS)})
         response.raise_for_status()
         with open(f"data/images/{prod_num}.jpg", "wb") as f:
             f.write(response.content)
