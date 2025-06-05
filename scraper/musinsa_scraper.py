@@ -3,20 +3,8 @@ import requests
 import random
 import re
 import json
-from PIL import Image
-import encoder
-
-
-user_agents = ['Mozilla/5.0 (compatible; FacebookBot/1.0; +https://developers.facebook.com/docs/sharing/webmasters/facebookbot/)',
-               'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
-               'Yeti/1.0 (NHN Corp.; http://help.naver.com/robots/)',
-               'Yeti/1.0 (+http://help.naver.com/robots/)',
-               'Mozilla/5.0 (compatible; MSIE or Firefox mutant; not on Windows server;) Daumoa-image/1.0',
-               'Mozilla/5.0 (compatible; MSIE or Firefox mutant; not on Windows server;) Daumoa 4.0',
-               'facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)']
-
-musinsa_url = "https://global.musinsa.com/us/goods/4234208"
-
+from user_agents import user_agents
+from datetime import datetime, timezone
 
 def get_num_pages():
     url = f"https://global.musinsa.com/us/category/clothing?page=1"
@@ -76,15 +64,10 @@ def get_page_info(page_num=1):
         print(f"No relevant <script> tag found on page {page_num}.")
 
 
-prod_list_100 = get_page_info(1)
+'''
 for prod in prod_list_100:
     prod_num = prod["prod_num"]
     image_url = prod["image_URL"]
-    image = Image.open(requests.get(image_url, headers={
-        'User-Agent': random.choice(user_agents)}, stream=True).raw)
-
-'''
-
     try:
         response = requests.get(image_url, headers={
             'User-Agent': random.choice(user_agents)})
@@ -97,21 +80,20 @@ for prod in prod_list_100:
         print(f"Failed to download {image_url}: {e}")
         prod["image_local_path"] = None
 
-with open("data/metadata.json", "w") as f:
+with open("data/raw/products.json", "w") as f:
     json.dump(prod_list_100, f, indent=2)
 '''
 
-
-'''
-MAX_PAGES = 10
+MAX_PAGES = 1
 def main():
-    all_pages_data = []
+    products = []
     for i in range(1, MAX_PAGES+1):
-        all_pages_data.extend(get_page_info(i))
-        
-    print(all_pages_data)
+        products.extend(get_page_info(i))
+    timestamp = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
+    with open("data/raw/products.json", "w") as f:
+        json.dump({"products": products,"last_updated": timestamp}, f)
 
 
 if __name__ == "__main__":
     main()
-'''
+
