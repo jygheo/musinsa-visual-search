@@ -50,4 +50,5 @@ venv.bak/
 .env.*.local
 secrets.ini
 config.ini
-/user_agents.py
+config/user_agents.py
+
