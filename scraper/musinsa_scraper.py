@@ -54,7 +54,7 @@ def get_page_info(page_num=1):
                         "brand_name": goods_dict["brandName"],
                         "image_url": "https:"+goods_dict["imageUrl"],
                         "price": goods_dict["price"],
-                        "prod_url": f"https://global.musinsa.com/us/goods/{goods_dict["goodsNo"]}"
+                        "prod_url": f"https://global.musinsa.com/us/goods/{goods_dict['goodsNo']}"
                     }
                     prod_dict_list.append(prod_dict)
                 return prod_dict_list
