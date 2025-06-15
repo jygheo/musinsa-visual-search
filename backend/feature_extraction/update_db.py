@@ -2,22 +2,30 @@ import json
 from encoder import encode_image, encode_text
 from backend.database.db import get_db_connection
 
+
 def verify_encoder():
     with open("data/raw/products.json") as f:
         data = json.load(f)
         for i in range(2):
             url = data["products"][i]["image_url"]
             image_embedding = encode_image(url)
-        
+
+
+def calculate_optimal_lists(len_records: int) -> int:
+    return max(10, min(1000, int(len_records ** 0.5)))
+
+
 def process_to_db():
     with open("data/raw/products.json") as f:
         data = json.load(f)
     conn = get_db_connection()
     cur = conn.cursor()
+    cur.execute("DROP INDEX IF EXISTS products_image_embedding_idx")
+    conn.commit()
     for product in data["products"]:
         try:
             image_embedding = encode_image(product["image_url"])
-            #text_embedding = encode_text(product["prod_name"])
+            # text_embedding = encode_text(product["prod_name"])
             cur.execute("""
                 INSERT INTO products (
                     prod_num, prod_name, brand_name, price,
@@ -33,10 +41,16 @@ def process_to_db():
                 product["image_url"],
                 product["prod_url"],
                 image_embedding
-                #,text_embedding
+                # ,text_embedding
             ))
         except Exception as e:
             print(f"Failed on {product['prod_num']}: {e}")
+    cur.execute("""
+        CREATE INDEX products_image_embedding_idx
+        ON products USING ivfflat (image_embedding vector_cosine_ops)
+        WITH (lists = %s)
+    """, (calculate_optimal_lists(len(data["products"])),))
+
     conn.commit()
     conn.close()
 
