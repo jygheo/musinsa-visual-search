@@ -26,7 +26,7 @@ def process_to_db():
     conn.commit()
     for product in data["products"]:
         try:
-            image_embedding = encode_image(product["image_url"])
+            image_embedding = encode_image( product["image_url"])
             # text_embedding = encode_text(product["prod_name"])
             cur.execute("""
                 INSERT INTO products (

@@ -5,6 +5,7 @@ import re
 import json
 from config.user_agents import USER_AGENTS
 from datetime import datetime, timezone
+from backend.database.db import get_db_connection
 
 # TODO: use https://global.musinsa.com/us/category/clothing?page=1&sortCode=NEW (avoid duplicates)
 
@@ -46,34 +47,32 @@ def get_page_info(page_num=1):
             try:
                 data = json.loads(json_str)
                 goods_info_list = data["goodsInfoList"]
-                prod_dict_list = []
                 for goods_dict in goods_info_list:
-                    prod_dict = {
-                        "prod_num": goods_dict["goodsNo"],
-                        "prod_name": goods_dict["goodsName"],
-                        "brand_name": goods_dict["brandName"],
-                        "image_url": "https:"+goods_dict["imageUrl"],
-                        "price": goods_dict["price"],
-                        "prod_url": f"https://global.musinsa.com/us/goods/{goods_dict['goodsNo']}"
-                    }
-                    prod_dict_list.append(prod_dict)
-                return prod_dict_list
-            except json.JSONDecodeError as e:
-                print(f"Failed to decode JSON: {e} on page {page_num}.")
+                    prod_num, prod_name, brand_name, price = goods_dict["goodsNo"], goods_dict["goodsName"], goods_dict["brandName"], goods_dict["price"]
+                    image_url = "https:"+goods_dict["imageUrl"]
+                    prod_url = f"https://global.musinsa.com/us/goods/{goods_dict['goodsNo']}"
+
+                    conn = get_db_connection()
+                    cur = conn.cursor()
+                    cur.execute("""
+                        INSERT INTO products (
+                            prod_num, prod_name, brand_name, price,
+                            image_url, prod_url
+                        ) VALUES (%s, %s, %s, %s, %s, %s)
+                        ON CONFLICT (prod_num) DO UPDATE SET
+                            price = EXCLUDED.price
+                    """, (
+                        prod_num, prod_name, brand_name, price, image_url, prod_url))
+                    conn.commit()
+            except Exception as e:
+                print(f"{e} on page {page_num}.")
         else:
             print(f"Could not find goodsList JSON on page {page_num}.")
     else:
         print(f"No relevant <script> tag found on page {page_num}.")
 
 MAX_PAGES = 1
-def main():
-    products = []
-    for i in range(1, MAX_PAGES+1):
-        products.extend(get_page_info(i))
-    timestamp = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
-    with open("data/raw/products.json", "w") as f:
-        json.dump({"products": products,"last_updated": timestamp}, f)
-
 
 if __name__ == "__main__":
-    maf
+    get_page_info
+
