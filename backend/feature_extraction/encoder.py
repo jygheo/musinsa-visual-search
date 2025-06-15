@@ -1,4 +1,4 @@
-from transformers import CLIPProcessor, AutoProcessor, CLIPModel, AutoModelForZeroShotImageClassification
+from transformers import CLIPProcessor, CLIPModel
 import torch
 from PIL import Image
 import numpy as np
@@ -11,28 +11,28 @@ model_id = "patrickjohncyh/fashion-clip"
 model = CLIPModel.from_pretrained(model_id)
 processor = CLIPProcessor.from_pretrained(model_id)
 
-def test_local_image():
-    image_path = Path(__file__).parent / "test.webp"
-    image = Image.open(image_path).convert("RGB")
+local_image_path = Path(__file__).parent / "test.webp"
+def test_local_image(local_image_path):
+    image = Image.open(local_image_path).convert("RGB")
     inputs = processor(images=image, return_tensors="pt", padding=True)
     with torch.no_grad():
-        image_embeds = model.get_image_features(**inputs)
-    if torch.isnan(image_embeds).any():
+        image_embedding = model.get_image_features(**inputs)
+    if torch.isnan(image_embedding).any():
         raise ValueError("NaN in embeddings")
-    return image_embeds.squeeze(0).cpu().numpy()
+    return image_embedding.squeeze(0).cpu().numpy()
 
 def test_url():
     image_url = "https://image.msscdn.net/thumbnails/images/goods_img/20230912/3551101/3551101_16970790961650_big.jpg"
     headers = {'User-Agent': random.choice(USER_AGENTS)}
     response = requests.get(image_url, headers=headers, stream=True)
-    image = Image.open(response.raw)
+    image = Image.open(response.raw).convert("RGB")
     
     inputs = processor(images=image, return_tensors="pt", padding=True)
     with torch.no_grad():
-        image_embeds = model.get_image_features(**inputs)
-    if torch.isnan(image_embeds).any():
+        image_embedding = model.get_image_features(**inputs)
+    if torch.isnan(image_embedding).any():
         raise ValueError("NaN in embeddings")
-    return image_embeds.squeeze(0).cpu().numpy()
+    return image_embedding.squeeze(0).cpu().numpy()
 
 
 def encode_image(image_url: str) -> np.ndarray:
@@ -42,14 +42,16 @@ def encode_image(image_url: str) -> np.ndarray:
 
     inputs = processor(images=image, return_tensors="pt", padding=True)
     with torch.no_grad():
-        image_embeds = model.get_image_features(**inputs)
-    return image_embeds.squeeze(0).cpu().numpy()
+        image_embedding = model.get_image_features(**inputs)
+    image_embedding = image_embedding / torch.norm(image_embedding, p=2)   
+    return image_embedding.squeeze(0).cpu().numpy()
 
 def encode_text(text: str) -> np.ndarray:
     inputs = processor(text=text, return_tensors='pt', padding=True)
     with torch.no_grad():
-        text_embeds= model.get_image_features(**inputs)
-    return text_embeds.squeeze(0).numpy()
+        text_embedding= model.get_image_features(**inputs)
+    text_embedding = text_embedding / torch.norm(text_embedding, p=2)   
+    return text_embedding.squeeze(0).numpy()
 
 def hybrid_embedding(image_url: str, text: str, alpha=0.5) -> np.ndarray:
     img_vec = encode_image(image_url)

@@ -1,7 +1,8 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="your_project",
+    name="musinsa_visual_search",
     version="0.1",
-    packages=find_packages(),
+    packages=find_packages(include=["backend", "backend.*"]),
+
 )

@@ -65,27 +65,6 @@ def get_page_info(page_num=1):
     else:
         print(f"No relevant <script> tag found on page {page_num}.")
 
-
-'''
-for prod in prod_list_100:
-    prod_num = prod["prod_num"]
-    image_url = prod["image_url"]
-    try:
-        response = requests.get(image_url, headers={
-            'User-Agent': random.choice(USER_AGENTS)})
-        response.raise_for_status()
-        with open(f"data/images/{prod_num}.jpg", "wb") as f:
-            f.write(response.content)
-        prod["image_local_path"] = f"data/images/{prod_num}.jpg"
-
-    except Exception as e:
-        print(f"Failed to download {image_url}: {e}")
-        prod["image_local_path"] = None
-
-with open("data/raw/products.json", "w") as f:
-    json.dump(prod_list_100, f, indent=2)
-'''
-
 MAX_PAGES = 1
 def main():
     products = []
