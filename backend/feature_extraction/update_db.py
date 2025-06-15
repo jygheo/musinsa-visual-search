@@ -10,9 +10,11 @@ def verify_encoder():
             url = data["products"][i]["image_url"]
             image_embedding = encode_image(url)
 
-
-def calculate_optimal_lists(len_records: int) -> int:
-    return max(10, min(1000, int(len_records ** 0.5)))
+def calculate_optimal_lists(num_records: int) -> int:
+    if num_records < 1000:
+        return max(1, int(num_records / 50))  
+    else:
+        return min(1000, int(num_records ** 0.5)) 
 
 
 def process_to_db():
@@ -45,11 +47,16 @@ def process_to_db():
             ))
         except Exception as e:
             print(f"Failed on {product['prod_num']}: {e}")
-    cur.execute("""
+    cur.execute("ANALYZE products")
+    cur.execute("SELECT reltuples FROM pg_class WHERE relname = 'products'")
+    actual_count = int(cur.fetchone()[0])
+
+    optimal_lists = calculate_optimal_lists(actual_count)
+    cur.execute(f"""
         CREATE INDEX products_image_embedding_idx
         ON products USING ivfflat (image_embedding vector_cosine_ops)
-        WITH (lists = %s)
-    """, (calculate_optimal_lists(len(data["products"])),))
+        WITH (lists = {optimal_lists})
+    """)
 
     conn.commit()
     conn.close()
