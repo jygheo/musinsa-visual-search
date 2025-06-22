@@ -4,7 +4,6 @@ import random
 import re
 import json
 from config.user_agents import USER_AGENTS
-from datetime import datetime, timezone
 from backend.database.db import get_db_connection
 
 # TODO: use https://global.musinsa.com/us/category/clothing?page=1&sortCode=NEW (avoid duplicates)
@@ -61,9 +60,9 @@ def get_page_info(page_num=1):
                         ) VALUES (%s, %s, %s, %s, %s, %s)
                         ON CONFLICT (prod_num) DO UPDATE SET
                             price = EXCLUDED.price
-                    """, (
-                        prod_num, prod_name, brand_name, price, image_url, prod_url))
+                    """, (prod_num, prod_name, brand_name, price, image_url, prod_url))
                     conn.commit()
+                    conn.close()
             except Exception as e:
                 print(f"{e} on page {page_num}.")
         else:
@@ -74,5 +73,5 @@ def get_page_info(page_num=1):
 MAX_PAGES = 1
 
 if __name__ == "__main__":
-    get_page_info
+    get_page_info()
 
