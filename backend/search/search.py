@@ -3,7 +3,7 @@ from backend.database.db import get_db_connection
 import time 
 
 
-def find_sim_products(query_embedding: np.ndarray, top_k: int = 5, filter_brand: str = None, filter_price: list[int] = None) -> list[dict]:
+def find_sim_products(query_embedding: np.ndarray, top_k: int = 20, filter_brand: str = None, filter_price: list[int] = None) -> list[dict]:
     start = time.perf_counter()
     conn = get_db_connection()
     cur = conn.cursor()
