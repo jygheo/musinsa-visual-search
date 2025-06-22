@@ -47,4 +47,4 @@ typing-inspection==0.4.1
 typing_extensions==4.13.2
 urllib3==2.4.0
 uvicorn==0.34.2
--e git+ssh://git@github.com/jygheo/musinsa-visual-search.git@d2c1a565cf088d76ed27623be917984409e6f224#egg=your_project
+-e .
