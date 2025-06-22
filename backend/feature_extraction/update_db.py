@@ -146,5 +146,5 @@ def update_all_embeddings_naive():
 
 if __name__ == "__main__":
     update_all_embeddings()
-    update_all_embeddings_naive()
+   # update_all_embeddings_naive()
 

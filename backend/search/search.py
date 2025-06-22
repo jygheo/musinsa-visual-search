@@ -1,8 +1,10 @@
 import numpy as np
 from backend.database.db import get_db_connection
+import time 
 
 
 def find_sim_products(query_embedding: np.ndarray, top_k: int = 5, filter_brand: str = None, filter_price: list[int] = None) -> list[dict]:
+    start = time.perf_counter()
     conn = get_db_connection()
     cur = conn.cursor()
     embedding_list = query_embedding
@@ -14,6 +16,8 @@ def find_sim_products(query_embedding: np.ndarray, top_k: int = 5, filter_brand:
     params = [embedding_list, embedding_list, top_k]
     cur.execute(query, params)
     res = cur.fetchall()
+    end = time.perf_counter()
+    print(f'Search runtime: {(end-start)*1000} ms')
     return [
         {
             "prod_num": row[0],
@@ -26,11 +30,3 @@ def find_sim_products(query_embedding: np.ndarray, top_k: int = 5, filter_brand:
         }
         for row in res
     ]
-    return([{
-            "prod_num": row[0],
-            "prod_name": row[1],
-            "brand_name": row[2],
-            "price": row[3],
-            "image_url": row[4],
-            "prod_url": row[7],
-            "similarity": float(row[8])} for row in res])

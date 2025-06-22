@@ -26,7 +26,6 @@ def get_num_pages():
             data = json.loads(json_str)
             return (data["totalCount"]/100 + 1)
 
-
 def get_page_info(page_num=1):
     url = f"https://global.musinsa.com/us/category/clothing?page={page_num}"
     response = requests.get(url, headers={
