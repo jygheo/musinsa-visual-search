@@ -6,6 +6,9 @@ import requests
 from config.user_agents import USER_AGENTS
 import random
 from pathlib import Path
+from swiftshadow.classes import Proxy
+import time
+
 
 model_id = "patrickjohncyh/fashion-clip"
 model = CLIPModel.from_pretrained(model_id)
@@ -57,6 +60,28 @@ def encode_image_from_url(image_url: str) -> np.ndarray:
 
     return encode_image(image)
 
+# protocol="https", countries=["US"],
+def prx_encode_image_from_url(image_url: str, proxy_manager, id, retries: int = 3, timeout: int = 10) -> np.ndarray | None:
+    for attempt in range(retries):
+        proxy = proxy_manager.proxy()
+        proxies = {proxy_manager.protocol: proxy}
+        headers = {'User-Agent': random.choice(USER_AGENTS)}
+        try: 
+            response = requests.get(image_url, headers=headers, proxies=proxies ,stream=True, timeout=timeout)
+            if response.status_code in [403, 404]:
+                print(f"Blocked: {image_url} status: {response.status_code}")
+                break 
+            response.raise_for_status()
+            image = Image.open(response.raw)
+            return encode_image(image)
+        except (requests.RequestException, OSError) as e:
+            print(f"[{attempt+1}/{retries}] failed {image_url} with proxy {proxy.as_string()}: {e}")
+            sleep_time = min(10, 2 ** attempt + random.uniform(0, 1)) 
+            time.sleep(sleep_time)
+    print(f"[FAILURE] All attempts failed for: {id}")
+    return None
+
+
 def encode_text(text: str) -> np.ndarray:
     inputs = processor(text=text, return_tensors='pt', padding=True)
     with torch.no_grad():
@@ -68,3 +93,10 @@ def hybrid_embedding(image_url: str, text: str, alpha=0.5) -> np.ndarray:
     img_vec = encode_image_from_url(image_url)
     txt_vec = encode_text(text)
     return (alpha*img_vec + (1-alpha)*txt_vec)
+
+
+# if __name__ == "__main__":
+#     proxy_manager = Proxy(autoRotate=True, maxProxies=1) 
+#     url = "https://image.msscdn.net/thumbnails/images/goods_img/20210825/2087767/2087767_2_big.jpg?w=780"
+#     embedding = prx_encode_image_from_url(url, proxy_manager)
+#     print(embedding)

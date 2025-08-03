@@ -1,6 +1,6 @@
 import numpy as np
-from backend.database.db import get_db_connection
-import time 
+from database.db import get_db_connection
+import time
 
 
 def find_sim_products(query_embedding: np.ndarray, top_k: int = 20, filter_brand: str = None, filter_price: list[int] = None) -> list[dict]:
@@ -26,7 +26,6 @@ def find_sim_products(query_embedding: np.ndarray, top_k: int = 20, filter_brand
             "price": row[3],
             "image_url": row[4],
             "prod_url": row[5],
-            "similarity": float(row[6])  
         }
         for row in res
     ]

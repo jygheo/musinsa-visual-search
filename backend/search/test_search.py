@@ -1,5 +1,5 @@
 from pathlib import Path
-from backend.feature_extraction.encoder import test_local_image
+from feature_extraction.encoder import test_local_image
 from search import find_sim_products
 
 image_path = Path(__file__).parent / "test.png"

@@ -1,0 +1,18 @@
+services:
+  backend:
+    build: .
+    container_name: fastapi-backend
+    env_file:
+      - .env
+    depends_on:
+      - redis
+    ports:
+      - "8000:8000"
+    restart: always
+    volumes:
+      - .:/app
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --workers 1
+
+  redis:
+    image: redis:7
+    container_name: redis
