@@ -105,3 +105,8 @@ dist-ssr
 
 config.jsx
 
+*.log
+*.txt
+*.json
+
+
