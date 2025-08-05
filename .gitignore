@@ -108,5 +108,8 @@ config.jsx
 *.log
 *.txt
 *.json
+.DS_Store
+.python-version
+.swiftshadow.json
 
 
