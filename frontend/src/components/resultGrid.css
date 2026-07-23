@@ -1,0 +1,135 @@
+
+
+.product-grid-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1.5rem;
+  padding: 1.5rem;
+  width: 100%;
+  box-sizing: border-box;
+
+}
+
+.product-link{
+  text-decoration: none;
+}
+
+.product-card {
+  background-color: #ffffff;
+  border-radius: 20px;
+  padding: 1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-family: 'Inter';
+  cursor: pointer;
+}
+
+.product-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+}
+
+.product-card img {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  border-radius: 12px;
+  background-color: #f0f0f0;
+}
+
+.brand-name {
+  font-weight: 600;
+  color: #2b384a;
+  font-size: 0.95rem;
+  text-align: left;
+  margin-top: 0.5rem;
+  line-height: 1.2;
+  text-decoration: none;
+
+}
+
+.product-name {
+  font-size: 0.85rem;
+  color: #777;
+  text-align: left;
+  line-height: 1.3;
+  text-decoration: none;
+
+}
+
+.price {
+  font-size: 0.95rem;
+  color: #b00020;
+  font-weight: 600;
+  text-align: left;
+  margin-top: auto;
+}
+
+
+
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.2s infinite ease-out;
+  border-radius: 8px;
+}
+
+@keyframes shimmer {
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.skeleton-img {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  border-radius: 12px;
+}
+
+.skeleton-text {
+  height: 14px;
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+.skeleton-text.short {
+  width: 70%;
+}
+
+.skeleton-text.price {
+  width: 40%;
+  margin-top: auto;
+  height: 16px;
+}
+
+
+.blank-img {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  border-radius: 12px;
+  color: #e0e0e0;
+}
+
+.blank-text {
+  height: 14px;
+  width: 100%;
+  margin-top: 0.5rem;
+  color: #e0e0e0;
+}
+
+.blank-text.short {
+  width: 70%;
+  color: #e0e0e0;
+}
+
+.blank-text.price {
+  width: 40%;
+  margin-top: auto;
+  height: 16px;
+  color: #e0e0e0;
+}
+

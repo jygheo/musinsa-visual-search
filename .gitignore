@@ -1,115 +1,47 @@
-# Python
+# --- Python ---
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
-
-# Environments
-.env
-.venv
-env/
+.venv/
 venv/
+env/
 ENV/
-env.bak/
-venv.bak/
-venv311/
-.python-version # pyenv version file
-
-# Python packaging
-*.egg-info/
-.coverage
 .pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+build/
+dist/
 
-# Logs and temporary files
-*.log
-*.txt
-output.log
-output.txt
-test.png # Assuming this is a temporary test image
-
-
-# Database
-*.sqlite3
-*.db
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# Logs
-*.log
-
-
-# Environment variables
+# --- Env / secrets ---
 .env
-.env.local
-.env.*.local
-secrets.ini
-config.ini
-config/user_agents.py
+.env.*
+!.env.example
+reference.md
 
-venv3119/
-
-# Node.js / Frontend
+# --- Node / frontend ---
 node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.parcel-cache/ # If using Parcel bundler
-build/ # Common build output directory
-dist/ # Common distribution directory
-
-# Logs
-logs
-*.log
+frontend/dist/
+frontend/.vite/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
-lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
-
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
+# --- Editor / OS ---
+.vscode/
+.idea/
 .DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+Thumbs.db
 
-config.jsx
-
+# --- Misc data / model cache ---
 *.log
-*.txt
-*.json
+*.webp
+*.jpg
+*.png
+!frontend/public/**
+.cache/
+huggingface/
 .DS_Store
-.python-version
-.swiftshadow.json
-
-
