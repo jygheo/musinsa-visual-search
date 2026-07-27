@@ -30,14 +30,14 @@ CREATE INDEX ON product_garments
 CREATE TABLE IF NOT EXISTS failed_products (
     id INTEGER PRIMARY KEY,
     image_url TEXT NOT NULL,
+    category_code TEXT,
     error TEXT,
     last_attempt TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- 5. Create the wardrobe_items table for the Canvas feature
 CREATE TABLE IF NOT EXISTS wardrobe_items (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    session_id TEXT, -- Use a session cookie/local storage ID if not enforcing login yet
+    session_id TEXT, 
     product_garment_id UUID REFERENCES product_garments(id) ON DELETE CASCADE,
     canvas_x REAL DEFAULT 0, 
     canvas_y REAL DEFAULT 0, 
