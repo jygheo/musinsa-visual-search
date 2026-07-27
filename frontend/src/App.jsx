@@ -4,12 +4,17 @@ import ImageUpload from './components/imageUpload'
 import ImageCrop from './components/imageCrop'
 import ResultGrid from './components/resultGrid'
 import Header from './components/header'
+import DetectionOverlay from './components/detectionOverlay'
 import { API_BASE } from './config'
 
 function App() {
   const [imageSrc, setImageSrc] = useState("")
   const [imageUrl, setImageUrl] = useState("")
   const [croppedImage, setCroppedImage] = useState(null)
+  
+  const [detections, setDetections] = useState(null)
+  const [isDetecting, setIsDetecting] = useState(false)
+  
   const [searchRes, setSearchRes] = useState(null)
   const [rateLimit, setRateLimit] = useState(false)
   const imageToCrop = imageSrc || imageUrl
@@ -23,17 +28,47 @@ function App() {
     if (imageUrl) {
       setImageUrl("")
     }
+    setDetections(null)
+    setCroppedImage(null)
   }, [imageSrc, imageUrl])
 
 
   useEffect(() => {
+    const runDetection = async () => {
+      if (imageSrc && !detections && !isDetecting) {
+        setIsDetecting(true)
+        
+        try {
+            // Fetch the image as a blob to send to the backend
+            const response = await fetch(imageSrc);
+            const blob = await response.blob();
+            
+            const formData = new FormData()
+            formData.append('file', blob)
+            
+            const detectRes = await fetch(`${API_BASE}/detect`, { method: 'POST', body: formData })
+            if (detectRes.ok) {
+                const data = await detectRes.json()
+                setDetections(data.detections || [])
+            }
+        } catch (error) {
+            console.error('Detection error:', error)
+        } finally {
+            setIsDetecting(false)
+        }
+      }
+    }
+    
+    runDetection()
+  }, [imageSrc, detections, isDetecting])
+  
+  useEffect(() => {
     const loadResultsForFile = async () => {
       if (croppedImage) {
-        console.log("searching")
+        console.log("searching file")
         setSearchRes("loading")
-        const delay = new Promise(res => setTimeout(res, 3000))
-        const dataFetch = getSearchResultsImage(croppedImage)
-        const [data] = await Promise.all([dataFetch, delay])
+        const data = await getSearchResultsImage(croppedImage)
+
         if (data == "error") {
           console.log("rate limit met")
           setSearchRes("error")
@@ -43,7 +78,7 @@ function App() {
       }
     }
     loadResultsForFile()
-  }, [croppedImage, resetImageToCrop])
+  }, [croppedImage])
 
 
   useEffect(() => {
@@ -51,9 +86,7 @@ function App() {
       if (imageUrl) {
         console.log("searching")
         setSearchRes("loading")
-        const delay = new Promise(res => setTimeout(res, 3000))
-        const dataFetch = getSearchResultsUrl(imageUrl)
-        const [data] = await Promise.all([dataFetch, delay])
+        const data = await getSearchResultsUrl(imageUrl)
         if (data == "error") {
           console.log("rate limit met")
           setSearchRes("error")
@@ -99,7 +132,6 @@ function App() {
         return ["error"]
       }
       const data = await response.json()
-      resetImageToCrop()
       return (data.results)
     }
     catch (error) {
@@ -125,12 +157,15 @@ function App() {
       <div className={searchRes ? 'with-result-container' : 'without-result-container'} ref={searchRes ? resultRef : null}>
         <div className={searchRes ? 'with-result-left' : ''}>
         
-          {(imageToCrop && imageSrc) ? (
-            <ImageCrop
-              className="crop-or-upload"
-              imageSrc={imageSrc || imageUrl}
-              resetImage={resetImageToCrop}
-              setCroppedImage={setCroppedImage}
+          {}
+          {isDetecting ? (
+            <div style={{ textAlign: 'center', padding: '2rem' }}>Detecting items...</div>
+          ) : (imageToCrop && imageSrc && detections) ? (
+            <DetectionOverlay
+              imageSrc={imageSrc}
+              detections={detections}
+              onSelectCrop={setCroppedImage}
+              onReset={resetImageToCrop}
             />
           ) : (
             <ImageUpload
@@ -145,7 +180,6 @@ function App() {
           )}
 
         </div>
-
         {(rateLimit || searchRes) && (
           <div className="with-result-right">
             {(rateLimit) && <div className="rate-limit-message">Try again later</div>}
