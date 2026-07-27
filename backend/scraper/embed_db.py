@@ -43,7 +43,7 @@ clip_processor = CLIPProcessor.from_pretrained(CLIP_MODEL_ID)
 
 # Adjust path based on your deployment layout
 YOLO_MODEL_PATH = os.path.join(os.path.dirname(
-    os.path.dirname(os.path.abspath(__file__))), 'segment.pt')
+    os.path.dirname(os.path.abspath(__file__))), '/models/yolo_segment.pt')
 print(f"Loading YOLO model from: {YOLO_MODEL_PATH}")
 yolo_model = YOLO(YOLO_MODEL_PATH)
 
@@ -80,7 +80,7 @@ def apply_transform(img):
 
 
 CHECKPOINT_URL = "https://drive.google.com/uc?id=11xTBALOeUkyuaK3l60CpkYHLTmv7k3dY"
-CHECKPOINT_PATH = "model/cloth_segm.pth"
+CHECKPOINT_PATH = "models/cloth_segm.pth"
 
 
 def download_model():
@@ -394,7 +394,7 @@ def run_consumer_loop(result_queue, conn, batch_size=16):
                 db_products.append(product)
             else:
                 log_failure(
-                    conn, product['id'], product['image_url'], "No valid detections found.")
+                    conn, product['id'], product['image_url'], product.get('category_code'), "No valid detections found.")
 
         if crops:
             # batch clip
@@ -446,7 +446,7 @@ def run_consumer_loop(result_queue, conn, batch_size=16):
         product, img, error = item
         if error:
             print(f"Failed {product['id']}: {error}")
-            log_failure(conn, product['id'], product['image_url'], error)
+            log_failure(conn, product['id'], product['image_url'], product.get('category_code'), error)
             continue
 
         batch_buffer.append((product, img))
