@@ -50,15 +50,15 @@ print(f"Loading YOLO model from: {YOLO_MODEL_PATH}")
 yolo_model = YOLO(YOLO_MODEL_PATH)
 
 SCRAPER_TO_MODEL_MAP = {
-    "001": ["top", "t-shirt", "shirt", "sweater"],
-    "002": ["outerwear", "jacket", "coat", "padding"],
-    "003": ["pants", "trousers", "shorts", "jeans"],
-    "100": ["dress", "skirt"],
-    "004": ["bag", "backpack", "crossbag"],
-    "005": ["footwear", "shoes", "sneakers", "boots"],
-    "007": ["headwear", "hat", "cap", "beanie"]
-}  # fix this, these aren't the classes
-
+    "001": ["top"],
+    "002": ["outerwear"],
+    "003": ["pants"],
+    "100": ["dress", "skirt"],   # if scraper code represents both
+    "004": ["bag"],
+    "103": ["footwear"],
+    "120": ["headwear"],
+    "101": ["accessory"],
+}
 
 class Normalize_image(object):
     def __init__(self, mean, std):
@@ -322,8 +322,6 @@ def log_failure(conn, product_id, image_url, category_code, error_msg):
         except Exception as e:
             print(f"Failed to log error for id {product_id}: {e}")
 
-
-
 def fetch_image(image_url, proxy_manager, retries=3):
     """Producer-side work only: downloading and downscaling heavy images."""
     for attempt in range(retries):
@@ -448,7 +446,8 @@ def run_consumer_loop(result_queue, conn, batch_size=16):
         product, img, error = item
         if error:
             print(f"Failed {product['id']}: {error}")
-            log_failure(conn, product['id'], product['image_url'], product.get('category_code'), error)
+            log_failure(conn, product['id'], product['image_url'], product.get(
+                'category_code'), error)
             continue
 
         batch_buffer.append((product, img))
