@@ -11,3 +11,6 @@ psycopg2-binary
 pgvector
 python-dotenv
 swiftshadow
+ultralytics
+gdown
+cv2
