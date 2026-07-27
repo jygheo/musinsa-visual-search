@@ -3,11 +3,11 @@ from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from PIL import Image
 from transformers import CLIPProcessor, CLIPModel
-
-from search import find_sim_products
-from encoder import encode_image, encode_image_from_url
-from config import CORS_ORIGINS
 import torch
+
+from app.search import find_sim_products
+from app.encoder import encode_image, encode_image_from_url
+from app.config import CORS_ORIGINS
 
 def get_device():
     if torch.cuda.is_available():

@@ -4,7 +4,7 @@ import numpy as np
 import requests
 import torch
 from PIL import Image
-from constants import USER_AGENTS
+from app.constants import USER_AGENTS
 
 
 def normalize_vector(vector: np.ndarray) -> np.ndarray:
@@ -15,7 +15,6 @@ def encode_image(image: Image.Image, model, processor) -> np.ndarray:
     image = image.convert("RGB")
     inputs = processor(images=image, return_tensors="pt", padding=True)
     
-    # Move all input tensors to the model's device
     inputs = {k: v.to(model.device) for k, v in inputs.items()}
     
     with torch.no_grad():

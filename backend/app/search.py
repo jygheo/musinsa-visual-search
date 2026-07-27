@@ -1,19 +1,20 @@
 import time
 import numpy as np
-from db import get_db_connection
+from app.db import get_db_connection
 
 
-def find_sim_products(query_embedding: np.ndarray, top_k: int = 20) -> list[dict]:
+def find_sim_products(query_embedding: np.ndarray, top_k: int = 20, ef_search:int = 200) -> list[dict]:
     start = time.perf_counter()
     conn = get_db_connection()
     cur = conn.cursor()
+    cur.execute("SET hnsw.ef_search = %s", (ef_search,))
     query = """
-        SELECT prod_num, prod_name, brand_name, price, image_url, prod_url,
-               1 - (image_embedding <=> %s) AS similarity
-        FROM products
+        SELECT p.prod_num, p.name, p.brand, p.price, p.image_url, p.url,
+               (SELECT 1 - (pg.image_embedding <=> %s) AS similarity FROM product_garments pg WHERE p.id=pg.id). 
+        FROM products p
         ORDER BY image_embedding <=> %s
         LIMIT %s
-    """
+    """  #TODO fix 
     cur.execute(query, [query_embedding, query_embedding, top_k])
     res = cur.fetchall()
     cur.close()
