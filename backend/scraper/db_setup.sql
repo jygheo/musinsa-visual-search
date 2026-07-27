@@ -1,25 +1,47 @@
-
 CREATE EXTENSION IF NOT EXISTS vector;
- 
+
 CREATE TABLE IF NOT EXISTS products (
-    id              SERIAL PRIMARY KEY,
-    prod_num        TEXT UNIQUE NOT NULL,
-    prod_name       TEXT NOT NULL,
-    brand_name      TEXT,
-    price           INTEGER,
-    image_url       TEXT NOT NULL,
-    prod_url        TEXT NOT NULL,
-    image_embedding VECTOR(512)   -- confirm against model.config.projection_dim before loading data
+    id SERIAL PRIMARY KEY,
+    name TEXT NOT NULL,
+    brand TEXT,
+    price INTEGER,
+    image_url TEXT UNIQUE NOT NULL, 
+    prod_num TEXT UNIQUE NOT NULL,
+    url TEXT UNIQUE NOT NULL,
+    category_code TEXT,           
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
- 
+
+CREATE TABLE IF NOT EXISTS product_garments (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    product_id INTEGER REFERENCES products(id) ON DELETE CASCADE,
+    bbox JSONB,             -- {x, y, w, h} normalized 0-1
+    polygon JSONB,          -- Normalized points for CSS clip-path mask
+    category TEXT,          -- Detected YOLO category 
+    is_primary BOOLEAN DEFAULT false,
+    embedding vector(512),  
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX ON product_garments
+    USING hnsw (embedding vector_cosine_ops)
+    WITH (m = 16, ef_construction = 64);
+
 CREATE TABLE IF NOT EXISTS failed_products (
-    id           INTEGER PRIMARY KEY REFERENCES products(id) ON DELETE CASCADE,
-    image_url    TEXT NOT NULL,
-    error        TEXT,
-    last_attempt TIMESTAMPTZ DEFAULT NOW()
+    id INTEGER PRIMARY KEY,
+    image_url TEXT NOT NULL,
+    error TEXT,
+    last_attempt TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
- 
--- Don't create the ivfflat index here. Build it only after the initial
--- embedding backfill via scraper/backfill_embeddings.py's recreate_ivfflat_index(),
--- since `lists` needs to be tuned against the real row count, and an index
--- built on an empty/near-empty table is useless (and gets stale as rows are added).
+
+-- 5. Create the wardrobe_items table for the Canvas feature
+CREATE TABLE IF NOT EXISTS wardrobe_items (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    session_id TEXT, -- Use a session cookie/local storage ID if not enforcing login yet
+    product_garment_id UUID REFERENCES product_garments(id) ON DELETE CASCADE,
+    canvas_x REAL DEFAULT 0, 
+    canvas_y REAL DEFAULT 0, 
+    canvas_rotation REAL DEFAULT 0, 
+    canvas_scale REAL DEFAULT 1.0,
+    added_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
