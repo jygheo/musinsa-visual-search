@@ -18,9 +18,8 @@ def encode_image(image: Image.Image, model, processor) -> np.ndarray:
     inputs = {k: v.to(model.device) for k, v in inputs.items()}
     
     with torch.no_grad():
-        image_embedding = model.get_image_features(**inputs)
+        image_embedding = (model.get_image_features(**inputs)).pooler_output
     return normalize_vector(image_embedding.squeeze(0).cpu().numpy())
-
 
 def encode_image_from_url(image_url: str, model, processor) -> np.ndarray:
     headers = {"User-Agent": random.choice(USER_AGENTS)}
@@ -54,7 +53,7 @@ def encode_text(text: str, model, processor) -> np.ndarray:
     inputs = {k: v.to(model.device) for k, v in inputs.items()}
     
     with torch.no_grad():
-        text_embedding = model.get_text_features(**inputs)
+        text_embedding = (model.get_text_features(**inputs)).pooler_output
     return normalize_vector(text_embedding.squeeze(0).cpu().numpy())
 
 def hybrid_embedding(image_url: str, text: str, model, processor, alpha=0.5) -> np.ndarray:
