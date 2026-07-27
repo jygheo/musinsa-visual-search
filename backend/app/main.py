@@ -8,6 +8,8 @@ import torch
 from app.search import find_sim_products
 from app.encoder import encode_image, encode_image_from_url
 from app.config import CORS_ORIGINS
+from app.detector import get_detections
+
 
 def get_device():
     if torch.cuda.is_available():
@@ -21,7 +23,7 @@ def get_device():
 device = get_device()
 model_id = "patrickjohncyh/fashion-clip"
 model = CLIPModel.from_pretrained(model_id).to(device)
-model.eval() # Good practice for inference
+model.eval()
 processor = CLIPProcessor.from_pretrained(model_id)
 
 app = FastAPI()
@@ -34,7 +36,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 @app.post("/search-file")
 async def search_file(file: UploadFile = File(None)):
     if not file:
@@ -46,7 +47,17 @@ async def search_file(file: UploadFile = File(None)):
     except Exception as e:
         raise HTTPException(400, f"Search failed: {str(e)}")
 
-
+@app.post("/detect")
+async def detect_image(file: UploadFile = File(None)):
+    if not file:
+        raise HTTPException(400, "Provide file.")
+    try:
+        image = Image.open(io.BytesIO(await file.read())).convert("RGB")
+        detections = get_detections(image, conf=0.35)
+        return {"detections": detections}
+    except Exception as e:
+        raise HTTPException(400, f"Detection failed: {str(e)}")
+    
 @app.post("/search-url")
 async def search_url(image_url: str = Form(None)):
     if not image_url:
