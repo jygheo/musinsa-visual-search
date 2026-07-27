@@ -86,16 +86,17 @@ def get_page_info(cur, conn, category_code: str, page_num: int = 1):
             
             cur.execute(
                 """
-                INSERT INTO products (prod_num, prod_name, brand_name, price, image_url, prod_url)
-                VALUES (%s, %s, %s, %s, %s, %s)
-                ON CONFLICT (prod_num) DO UPDATE SET price = EXCLUDED.price
+                INSERT INTO products (name, brand, price, image_url, prod_num, url, category_code)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                ON CONFLICT (prod_num) DO NOTHING
                 """,
-                (prod_num, prod_name, brand_name, price, image_url, prod_url),
+                (prod_name, brand_name, price, image_url, prod_num, prod_url, category_code),
             )
         conn.commit()
     except Exception as e:
         print(f"Error {e} on category {category_code} page {page_num}.")
         conn.rollback()
+
 
 if __name__ == "__main__":
     conn = get_db_connection()
