@@ -41,9 +41,11 @@ clip_model = CLIPModel.from_pretrained(CLIP_MODEL_ID).to(DEVICE)
 clip_model.eval()
 clip_processor = CLIPProcessor.from_pretrained(CLIP_MODEL_ID)
 
-# Adjust path based on your deployment layout
-YOLO_MODEL_PATH = os.path.join(os.path.dirname(
-    os.path.dirname(os.path.abspath(__file__))), '/models/yolo_segment.pt')
+YOLO_MODEL_PATH = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+    "models",
+    "yolo_segment.pt"
+)
 print(f"Loading YOLO model from: {YOLO_MODEL_PATH}")
 yolo_model = YOLO(YOLO_MODEL_PATH)
 
