@@ -6,7 +6,7 @@ from transformers import CLIPProcessor, CLIPModel
 import torch
 import traceback
 
-from app.search import find_sim_products
+from app.search import find_sim_products, find_sim_products_by_id
 from app.encoder import encode_image, encode_image_from_url
 from app.config import CORS_ORIGINS
 from app.detector import get_detections
@@ -23,7 +23,7 @@ device = get_device()
 model_id = "patrickjohncyh/fashion-clip"
 model = CLIPModel.from_pretrained(model_id)
 
-if device.type == "cpu":  # or: if str(device) == "cpu":
+if device.type == "cpu": 
     with torch.no_grad():
         for p in model.parameters():
             p.data = p.data.clone().contiguous()
@@ -83,6 +83,18 @@ async def search_url(image_url: str = Form(None)):
         return {"results": find_sim_products(query_embedding=embedding)}
     except Exception as e:
         print("\n--- ERROR IN /search-url ---")
+        traceback.print_exc()
+        print("----------------------------\n")
+        raise HTTPException(500, f"Search failed: {str(e)}")
+
+@app.post("/search-id")
+async def search_id(garment_id: str = Form(None)):
+    if not garment_id:
+        raise HTTPException(400, "Provide garment_id.")
+    try:
+        return {"results": find_sim_products_by_id(garment_id=garment_id)}
+    except Exception as e:
+        print("\n--- ERROR IN /search-id ---")
         traceback.print_exc()
         print("----------------------------\n")
         raise HTTPException(500, f"Search failed: {str(e)}")
