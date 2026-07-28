@@ -7,7 +7,7 @@ import torch
 import traceback
 
 from app.search import find_sim_products, find_sim_products_by_id
-from app.encoder import encode_image, encode_image_from_url
+from app.encoder import encode_image, encode_image_from_url, encode_text, normalize_vector
 from app.config import CORS_ORIGINS
 from app.detector import get_detections
 
@@ -46,18 +46,29 @@ app.add_middleware(
 )
 
 @app.post("/search-file")
-async def search_file(file: UploadFile = File(None)):
-    if not file:
-        raise HTTPException(400, "Provide file.")
+async def search_file(file: UploadFile = File(None), text_query: str = Form(None)):
+    if not file and not text_query:
+        raise HTTPException(400, "Provide file or text.")
     try:
-        image = Image.open(io.BytesIO(await file.read()))
-        embedding = encode_image(image=image, model=model, processor=processor)
-        return {"results": find_sim_products(query_embedding=embedding)}
+        if file and text_query:
+            image = Image.open(io.BytesIO(await file.read()))
+            img_emb = encode_image(image=image, model=model, processor=processor)
+            txt_emb = encode_text(text=text_query, model=model, processor=processor)
+            fused = normalize_vector(0.7 * img_emb + 0.3 * txt_emb)
+            return {"results": find_sim_products(query_embedding=fused)}
+        elif file:
+            image = Image.open(io.BytesIO(await file.read()))
+            img_emb = encode_image(image=image, model=model, processor=processor)
+            return {"results": find_sim_products(query_embedding=img_emb)}
+        else:
+            txt_emb = encode_text(text=text_query, model=model, processor=processor)
+            return {"results": find_sim_products(query_embedding=txt_emb)}
     except Exception as e:
         print("\n--- ERROR IN /search-file ---")
-        traceback.print_exc()  # This prints the full error to your terminal!
+        traceback.print_exc()
         print("-----------------------------\n")
         raise HTTPException(500, f"Search failed: {str(e)}")
+
 
 @app.post("/detect")
 async def detect_image(file: UploadFile = File(None)):
@@ -75,12 +86,21 @@ async def detect_image(file: UploadFile = File(None)):
         raise HTTPException(500, f"Detection failed: {str(e)}")
     
 @app.post("/search-url")
-async def search_url(image_url: str = Form(None)):
-    if not image_url:
-        raise HTTPException(400, "Provide url.")
+async def search_url(image_url: str = Form(None), text_query: str = Form(None)):
+    if not image_url and not text_query:
+        raise HTTPException(400, "Provide url or text.")
     try:
-        embedding = encode_image_from_url(image_url=image_url, model=model, processor=processor)
-        return {"results": find_sim_products(query_embedding=embedding)}
+        if image_url and text_query:
+            img_emb = encode_image_from_url(image_url=image_url, model=model, processor=processor)
+            txt_emb = encode_text(text=text_query, model=model, processor=processor)
+            fused = normalize_vector(0.7 * img_emb + 0.3 * txt_emb)
+            return {"results": find_sim_products(query_embedding=fused)}
+        elif image_url:
+            img_emb = encode_image_from_url(image_url=image_url, model=model, processor=processor)
+            return {"results": find_sim_products(query_embedding=img_emb)}
+        else:
+            txt_emb = encode_text(text=text_query, model=model, processor=processor)
+            return {"results": find_sim_products(query_embedding=txt_emb)}
     except Exception as e:
         print("\n--- ERROR IN /search-url ---")
         traceback.print_exc()
