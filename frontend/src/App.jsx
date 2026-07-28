@@ -14,7 +14,8 @@ function App() {
   
   const [detections, setDetections] = useState(null)
   const [isDetecting, setIsDetecting] = useState(false)
-  
+  const [showManualCrop, setShowManualCrop] = useState(false)
+
   const [searchRes, setSearchRes] = useState(null)
   const [rateLimit, setRateLimit] = useState(false)
   const imageToCrop = imageSrc || imageUrl
@@ -30,6 +31,7 @@ function App() {
     }
     setDetections(null)
     setCroppedImage(null)
+    setShowManualCrop(false)
   }, [imageSrc, imageUrl])
 
 
@@ -151,6 +153,17 @@ function App() {
     }
   }, [])
 
+  const searchFullImage = async () => {
+    if (!imageSrc) return;
+    try {
+      const response = await fetch(imageSrc);
+      const blob = await response.blob();
+      setCroppedImage(blob);
+    } catch (error) {
+      console.error("Failed to fetch full image blob:", error);
+    }
+  }
+
   return (
     <>
       <Header />
@@ -160,12 +173,24 @@ function App() {
           {}
           {isDetecting ? (
             <div style={{ textAlign: 'center', padding: '2rem' }}>Detecting items...</div>
+          ) : showManualCrop ? (
+            <ImageCrop
+              imageSrc={imageSrc}
+              setCroppedImage={(img) => {
+                setCroppedImage(img);
+                setShowManualCrop(false);
+              }}
+              onCancel={() => setShowManualCrop(false)}
+              onReset={resetImageToCrop}
+            />
           ) : (imageToCrop && imageSrc && detections) ? (
             <DetectionOverlay
               imageSrc={imageSrc}
               detections={detections}
               onSelectCrop={setCroppedImage}
               onReset={resetImageToCrop}
+              onSearchFull={searchFullImage}
+              onManualCrop={() => setShowManualCrop(true)}
             />
           ) : (
             <ImageUpload
