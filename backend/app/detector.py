@@ -57,8 +57,8 @@ def consolidate_detections(detections, iou_threshold=0.15, distance_threshold=0.
                 final.append(cur)
     return final
 
-def get_detections(img: Image.Image, conf=0.45) -> list[dict]:
-    results = model(img, conf=conf, verbose=False)
+def get_detections(img: Image.Image, conf=0.35, device="cpu") -> list[dict]:
+    results = model(img, conf=conf, device=device, verbose=False)
     raw_detections = []
     
     for result in results:
