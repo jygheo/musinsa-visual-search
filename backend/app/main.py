@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from PIL import Image
 from transformers import CLIPProcessor, CLIPModel
 import torch
+import traceback
 
 from app.search import find_sim_products
 from app.encoder import encode_image, encode_image_from_url
@@ -12,17 +13,25 @@ from app.detector import get_detections
 
 
 def get_device():
-    if torch.cuda.is_available():
-        return torch.device("cuda")
-    elif torch.backends.mps.is_available():
-        return torch.device("mps")
-    else:
-        return torch.device("cpu")
+    if torch.cuda.is_available(): return torch.device("cuda")
+    elif torch.backends.mps.is_available(): return torch.device("mps")
+    return torch.device("cpu")
 
 
 device = get_device()
+
 model_id = "patrickjohncyh/fashion-clip"
-model = CLIPModel.from_pretrained(model_id).to(device)
+model = CLIPModel.from_pretrained(model_id)
+
+if device.type == "cpu":  # or: if str(device) == "cpu":
+    with torch.no_grad():
+        for p in model.parameters():
+            p.data = p.data.clone().contiguous()
+        for b in model.buffers():
+            b.data = b.data.clone().contiguous()
+
+    model = model.float()
+model = model.to(device)
 model.eval()
 processor = CLIPProcessor.from_pretrained(model_id)
 
@@ -45,7 +54,10 @@ async def search_file(file: UploadFile = File(None)):
         embedding = encode_image(image=image, model=model, processor=processor)
         return {"results": find_sim_products(query_embedding=embedding)}
     except Exception as e:
-        raise HTTPException(400, f"Search failed: {str(e)}")
+        print("\n--- ERROR IN /search-file ---")
+        traceback.print_exc()  # This prints the full error to your terminal!
+        print("-----------------------------\n")
+        raise HTTPException(500, f"Search failed: {str(e)}")
 
 @app.post("/detect")
 async def detect_image(file: UploadFile = File(None)):
@@ -53,10 +65,14 @@ async def detect_image(file: UploadFile = File(None)):
         raise HTTPException(400, "Provide file.")
     try:
         image = Image.open(io.BytesIO(await file.read())).convert("RGB")
-        detections = get_detections(image, conf=0.35)
+        # Passing the device explicitly to ensure YOLO uses CPU too
+        detections = get_detections(image, conf=0.35, device=str(device))
         return {"detections": detections}
     except Exception as e:
-        raise HTTPException(400, f"Detection failed: {str(e)}")
+        print("\n--- ERROR IN /detect ---")
+        traceback.print_exc()
+        print("------------------------\n")
+        raise HTTPException(500, f"Detection failed: {str(e)}")
     
 @app.post("/search-url")
 async def search_url(image_url: str = Form(None)):
@@ -66,4 +82,7 @@ async def search_url(image_url: str = Form(None)):
         embedding = encode_image_from_url(image_url=image_url, model=model, processor=processor)
         return {"results": find_sim_products(query_embedding=embedding)}
     except Exception as e:
-        raise HTTPException(400, f"Search failed: {str(e)}")
+        print("\n--- ERROR IN /search-url ---")
+        traceback.print_exc()
+        print("----------------------------\n")
+        raise HTTPException(500, f"Search failed: {str(e)}")
