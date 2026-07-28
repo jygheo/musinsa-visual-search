@@ -1,0 +1,104 @@
+.detection-overlay-container {
+display: flex;
+flex-direction: column;
+align-items: center;
+gap: 1.25rem;
+width: 100%;
+max-width: 500px;
+margin: 0 auto;
+font-family: 'Inter', sans-serif;
+}
+
+.detection-instructions {
+color: #555;
+font-size: 0.95rem;
+text-align: center;
+margin-bottom: -0.5rem;
+}
+
+/* STREAMING_CHUNK:Styling the image wrapper and transparent bounding boxes */
+.image-wrapper {
+position: relative;
+width: 100%;
+border-radius: 12px;
+overflow: hidden;
+box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+background-color: #f5f5f5;
+}
+
+.source-image {
+display: block;
+width: 100%;
+height: auto;
+object-fit: contain;
+}
+
+.bounding-box {
+position: absolute;
+border: 2px solid rgba(255, 255, 255, 0.8);
+box-shadow: 0 0 0 1px rgba(0,0,0,0.2), inset 0 0 0 1px rgba(0,0,0,0.2);
+background-color: rgba(255, 255, 255, 0.1);
+cursor: pointer;
+transition: all 0.2s ease-in-out;
+border-radius: 6px;
+}
+
+.bounding-box:hover {
+background-color: rgba(255, 255, 255, 0.25);
+border: 2px solid #2b384a;
+box-shadow: 0 0 0 1px rgba(255,255,255,0.4), inset 0 0 0 1px rgba(255,255,255,0.4);
+transform: scale(1.02);
+z-index: 10;
+}
+
+/* STREAMING_CHUNK:Action button styling */
+.detection-actions {
+display: flex;
+gap: 0.75rem;
+flex-wrap: wrap;
+justify-content: center;
+width: 100%;
+}
+
+.action-btn {
+padding: 0.6rem 1.25rem;
+border-radius: 20px;
+border: none;
+font-size: 0.9rem;
+font-weight: 500;
+cursor: pointer;
+transition: transform 0.2s, background-color 0.2s, box-shadow 0.2s;
+}
+
+.action-btn:hover {
+transform: translateY(-2px);
+box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.action-btn.primary {
+background-color: #2b384a;
+color: white;
+}
+
+.action-btn.primary:hover {
+background-color: #1a2330;
+}
+
+.action-btn.secondary {
+background-color: #e2e8f0;
+color: #334155;
+}
+
+.action-btn.secondary:hover {
+background-color: #cbd5e1;
+}
+
+.action-btn.danger {
+background-color: transparent;
+color: #ef4444;
+border: 1px solid #fee2e2;
+}
+
+.action-btn.danger:hover {
+background-color: #fef2f2;
+}

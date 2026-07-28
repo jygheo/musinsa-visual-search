@@ -176,7 +176,6 @@ export default function ImageUpload({ setImageSrc, setImageUrl, setCroppedImage 
             <p className="upload-text">
               Drop your image here, or <span className="fake-link">browse</span>
             </p>
-            <small className="file-hint">Maximum file size: 20MB</small>
           </div>
 
           <div className="line-container">
