@@ -1,0 +1,152 @@
+.image-crop-container {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.1rem;
+  box-sizing: border-box;
+  font-family: var(--font-body);
+}
+
+.crop-header {
+  width: 100%;
+  text-align: left;
+}
+
+.crop-title {
+  font-family: var(--font-tag);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--sage);
+  margin: 0;
+  font-weight: 700;
+}
+
+.crop-wrapper {
+  position: relative;
+  width: 100%;
+  background-color: var(--card);
+  border: 2px solid var(--ink);
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+.crop-wrapper img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+.crop-wrapper .close-icon {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  font-size: 1.2rem;
+  color: var(--ink-soft);
+  cursor: pointer;
+  z-index: 2;
+  transition: color 0.2s ease;
+  background: var(--card);
+  border-radius: 50%;
+}
+
+.crop-wrapper .close-icon:hover {
+  color: var(--rust);
+}
+
+/* -- Scanning overlay: subtle animated line rather than a dead spinner -- */
+.scan-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(42, 38, 33, 0.06);
+  backdrop-filter: blur(1px);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  overflow: hidden;
+  z-index: 5;
+}
+
+.scan-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--rust), transparent);
+  animation: scanSweep 1.8s ease-in-out infinite;
+}
+
+@keyframes scanSweep {
+  0% { top: 0%; }
+  50% { top: 96%; }
+  100% { top: 0%; }
+}
+
+.scan-label {
+  margin-bottom: 12px;
+  font-family: var(--font-tag);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  background: var(--ink);
+  color: var(--paper);
+  padding: 6px 12px;
+  font-weight: 700;
+}
+
+.crop-actions {
+  display: flex;
+  gap: 0.6rem;
+  width: 100%;
+}
+
+.crop-btn {
+  flex: 1;
+  height: 42px;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  font-family: var(--font-tag);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background-color 0.2s ease;
+  border: 2px solid var(--ink);
+}
+
+.crop-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.crop-btn-primary {
+  background-color: var(--ink);
+  color: var(--paper);
+  box-shadow: 3px 3px 0px var(--rust);
+}
+.crop-btn-primary:hover:not(:disabled) {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0px var(--rust);
+}
+
+.crop-btn-secondary {
+  background-color: var(--card);
+  color: var(--ink);
+  box-shadow: 3px 3px 0px var(--sage);
+}
+.crop-btn-secondary:hover:not(:disabled) {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0px var(--sage);
+}
+
+@media screen and (max-width: 768px) {
+  .crop-actions { flex-direction: column; }
+}

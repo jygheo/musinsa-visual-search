@@ -1,0 +1,80 @@
+/* STREAMING_CHUNK:Defining shared button styles with warm palette */
+.action-btn {
+  padding: 0.6rem 1.25rem;
+  border-radius: var(--radius-sm, 5px);
+  border: 2px solid var(--ink, #2a2621);
+  font-size: 0.85rem;
+  font-weight: 700;
+  font-family: var(--font-tag, 'Space Mono', monospace);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background-color 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.action-btn.primary {
+  background-color: var(--ink, #2a2621);
+  color: var(--paper, #fbf6ec);
+  box-shadow: 3px 3px 0px var(--rust, #a8532e);
+}
+.action-btn.primary:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0px var(--rust, #a8532e);
+}
+
+.action-btn.secondary {
+  background-color: var(--card, #fffdf7);
+  color: var(--ink, #2a2621);
+  box-shadow: 3px 3px 0px var(--sage, #4a5d4e);
+}
+.action-btn.secondary:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0px var(--sage, #4a5d4e);
+}
+
+.action-btn.danger {
+  background-color: transparent;
+  color: var(--rust-dark, #863f21);
+  border: 2px solid var(--line-strong, #c7bc9d);
+  box-shadow: none;
+}
+.action-btn.danger:hover {
+  border-color: var(--rust, #a8532e);
+  background-color: var(--paper-dim, #f2ecdc);
+}
+
+.action-btn:active {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0px var(--ink, #2a2621) !important;
+}
+
+/* STREAMING_CHUNK:Defining shared error banner styles */
+.shared-error-banner {
+  width: 100%;
+  background-color: var(--card, #fffdf7);
+  border: 2px solid var(--rust, #a8532e);
+  border-radius: var(--radius-sm, 5px);
+  padding: 0.75rem 1rem;
+  color: var(--rust-dark, #863f21);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.88rem;
+  margin-bottom: 1rem;
+  box-sizing: border-box;
+  font-family: var(--font-body, 'Inter', sans-serif);
+}
+
+.shared-error-banner .close-icon {
+  cursor: pointer;
+  font-size: 1.2rem;
+  color: var(--rust-dark, #863f21);
+  transition: opacity 0.2s;
+}
+.shared-error-banner .close-icon:hover {
+  opacity: 0.7;
+}

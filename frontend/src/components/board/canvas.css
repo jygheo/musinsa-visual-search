@@ -1,0 +1,127 @@
+/* STREAMING_CHUNK:Defining full-bleed canvas workspace */
+.canvas-workspace {
+  width: 100%;
+  min-height: calc(100vh - 80px); /* Account for collapsed header */
+  background-color: #fdfdfc;
+  background-image:
+    url("https://www.transparenttextures.com/patterns/cream-paper.png"),
+    radial-gradient(circle at center, #f4eee6 0%, #e8e2d8 100%);
+  position: relative;
+  overflow: hidden;
+  box-shadow: inset 0 4px 16px rgba(0,0,0,0.04);
+}
+
+/* STREAMING_CHUNK:Empty state and template UI */
+.empty-canvas-state {
+  position: absolute;
+  top: 45%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  text-align: center;
+  pointer-events: none; /* Let clicks pass through to board */
+}
+
+.empty-canvas-text {
+  color: #616a75;
+  font-size: 1.15rem;
+  font-weight: 400;
+  font-family: 'Inter', sans-serif;
+}
+
+.template-btn {
+  pointer-events: auto;
+  background: #4a5d4e;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 30px;
+  font-weight: 500;
+  font-size: 0.95rem;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(74, 93, 78, 0.2);
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.template-btn:hover {
+  background: #3b4a3e;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(74, 93, 78, 0.3);
+}
+
+/* STREAMING_CHUNK:Lightweight hover cards */
+.canvas-hover-card {
+  position: absolute;
+  bottom: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(4px);
+  padding: 6px 12px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+  min-width: max-content;
+  z-index: 100;
+  opacity: 0;
+  transition: opacity 0.2s ease, bottom 0.2s ease;
+}
+
+.canvas-item-wrapper:hover .canvas-hover-card {
+  opacity: 1;
+  bottom: -45px;
+}
+
+.hover-brand { font-size: 0.75rem; font-weight: 600; color: #33312e; }
+.hover-price { font-size: 0.8rem; font-weight: 600; color: #bc4749; }
+
+/* STREAMING_CHUNK:Refined Moveable Controls (Hide by default) */
+.moveable-control-box {
+  display: none !important;
+}
+.canvas-item-wrapper:hover .moveable-control-box,
+.moveable-control-box.moveable-dragging {
+  display: block !important;
+}
+
+/* STREAMING_CHUNK:Black Hole Trash Zone */
+.trash-zone {
+  position: absolute;
+  bottom: 2rem;
+  right: 2rem;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(253, 253, 252, 0.8);
+  border: 2px dashed #d1ccbf;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  z-index: 4000;
+  color: #a39e93;
+}
+
+.trash-zone.trash-active {
+  background: #bc4749;
+  border-color: #bc4749;
+  color: white;
+  transform: scale(1.15);
+  box-shadow: 0 8px 24px rgba(188, 71, 73, 0.3);
+}
+
+.sucked-into-black-hole {
+  transform: scale(0) !important;
+  opacity: 0 !important;
+  transition: transform 0.4s cubic-bezier(0.55, 0.085, 0.68, 0.53), opacity 0.4s ease !important;
+  pointer-events: none;
+}

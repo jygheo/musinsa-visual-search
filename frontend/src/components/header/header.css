@@ -1,0 +1,218 @@
+.hero-section {
+  position: relative;
+  background: transparent;
+  padding: 4.5rem 2rem 3.5rem;
+  text-align: center;
+  height: auto;
+  transition: all 0.3s ease;
+}
+
+.hero-section.collapsed {
+  padding: 0.85rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  border-bottom: 2px solid var(--ink);
+  background: rgba(251, 246, 236, 0.94);
+  backdrop-filter: blur(4px);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.hero-section.collapsed .hero-content {
+  margin: 0 0 0 2.75rem;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.hero-section.collapsed .tag-mark {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+}
+.hero-section.collapsed .tag-mark svg { width: 18px; height: 18px; }
+
+.hero-section.collapsed h1 {
+  font-size: 1.15rem;
+  margin-bottom: 0;
+  letter-spacing: -0.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.hero-section.collapsed h1 br { display: none; }
+
+.hero-section.collapsed .eyebrow,
+.hero-section.collapsed .description {
+  display: none;
+}
+
+.hero-content {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 0 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+/* Signature: a little swing tag, like a garment label */
+.tag-mark {
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: rotate(-6deg);
+}
+
+.eyebrow {
+  font-family: var(--font-tag);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--sage);
+  font-weight: 700;
+  margin: 0 0 0.75rem;
+}
+
+.hero-section h1 {
+  font-family: var(--font-display);
+  font-size: 2.75rem;
+  font-weight: 600;
+  font-style: italic;
+  color: var(--ink);
+  margin: 0 0 0.9rem;
+  letter-spacing: -1px;
+  line-height: 1.15;
+  max-width: 14ch;
+}
+
+.description {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  color: var(--ink-soft);
+  font-weight: 400;
+  line-height: 1.5;
+  max-width: 32ch;
+  margin: 0 auto;
+}
+
+.header-actions {
+  position: absolute;
+  top: 1.75rem;
+  right: 1.75rem;
+  z-index: 10;
+  transition: top 0.3s ease;
+}
+
+.hero-section.collapsed .header-actions {
+  top: 0.7rem;
+  right: 1.25rem;
+}
+
+.header-home {
+  position: absolute;
+  top: 1.75rem;
+  left: 1.75rem;
+  z-index: 10;
+  transition: top 0.3s ease;
+}
+
+.hero-section.collapsed .header-home {
+  top: 0.7rem;
+  left: 1.25rem;
+}
+
+.home-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  border: 2px solid var(--ink);
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 3px 3px 0px var(--ink);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, color 0.2s ease;
+}
+
+.home-btn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 5px 5px 0px var(--sage);
+  color: var(--sage-dark);
+}
+
+.home-btn:active {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0px var(--ink);
+}
+
+.hero-section.collapsed .home-btn {
+  width: 32px;
+  height: 32px;
+}
+
+/* Tag-chip style button: flat, sharp-ish corners, hard offset shadow */
+.board-toggle-btn {
+  position: relative;
+  background: var(--card);
+  border: 2px solid var(--ink);
+  border-radius: var(--radius-sm);
+  padding: 7px 14px;
+  cursor: pointer;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-weight: 700;
+  font-family: var(--font-tag);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  box-shadow: 3px 3px 0px var(--ink);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.board-toggle-btn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 5px 5px 0px var(--rust);
+  color: var(--rust-dark);
+}
+
+.board-toggle-btn:active {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0px var(--ink);
+}
+
+.wardrobe-badge {
+  position: absolute;
+  top: -9px;
+  right: -9px;
+  background-color: var(--rust);
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 700;
+  font-family: var(--font-tag);
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--paper);
+  animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes popIn {
+  0% { transform: scale(0); }
+  100% { transform: scale(1); }
+}
+
+@media screen and (max-width: 600px) {
+  .hero-section h1 { font-size: 2.2rem; }
+}

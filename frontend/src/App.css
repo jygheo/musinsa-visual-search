@@ -1,70 +1,199 @@
-.with-result-container,
+/* Container when searching is active */
+.with-result-container {
+display: flex;
+flex-direction: column;
+gap: 1rem;
+}
+
+/* Container for Landing/Pre-Search (States A & B) */
 .without-result-container {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: flex-start;
+width: 100%;
+padding-top: 1.25rem;
+padding-bottom: 3rem;
+min-height: calc(100vh - 130px);
+box-sizing: border-box;
 }
 
-/* Desktop layout switch */
+.state-ab-layout {
+width: 100%;
+max-width: 500px;
+display: flex;
+justify-content: center;
+}
+
 @media (min-width: 768px) {
-  .with-result-container {
-    flex-direction: row;
-  }
+.with-result-container {
+flex-direction: row;
+align-items: flex-start; /* Important for sticky to work */
 }
-
-.with-result-left,
-.with-result-right {
-  padding: 1.5rem;
 }
 
 .with-result-left {
-  flex: 1;
+flex: 1;
+padding: 1.5rem 1.5rem 3rem;
+max-width: 400px;
+position: sticky;
+top: 100px;
+height: max-content; /* Ensure container only matches content height to stick properly */
+box-sizing: border-box;
 }
-
 
 .with-result-right {
-  flex: 2.5;
-  overflow-y: auto;
+flex: 2.5;
+padding: 1.5rem;
+min-width: 0; /* CRITICAL FIX: Prevents CSS Grid blowout inside a flex container */
 }
 
-.crop-or-upload {
+/* -- Reference card (shown after "Find Similar") -- matches ImageCrop styling -- */
+.reference-card {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
   align-items: center;
-}
-
-.with-result-left,
-.with-result-right,
-.crop-or-upload {
-  transition: all 0.3s ease;
-}
-
-.rate-limit-message {
-  width: 100%;
-  background-color: #ffe5e5;
-  border: 1px solid #ff6b6b;
-  gap: 1.5rem;
-  padding: 0.75rem 1rem;
-  border-radius: 20px;
-  color: #b00020;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 0.9rem;
-  margin-bottom: 1rem;
-  opacity: 1;
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  gap: 1.1rem;
   box-sizing: border-box;
+  font-family: var(--font-body);
 }
 
-.extender {
-  height: 300px;
+.reference-tag {
+  width: 100%;
+  text-align: left;
+  font-family: var(--font-tag);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--sage);
+  font-weight: 700;
+}
+
+.reference-image-frame {
+  position: relative;
+  width: 100%;
+  background-color: var(--card);
+  border: 2px solid var(--ink);
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-sizing: border-box;
+  max-height: 60vh;
+}
+
+.reference-image {
+  max-width: 100%;
+  max-height: 60vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  display: block;
+}
+
+.reference-clear-btn {
+  width: 100%;
+  height: 42px;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  font-family: var(--font-tag);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background-color 0.2s ease;
+  border: 2px solid var(--ink);
+  background-color: var(--card);
+  color: var(--ink);
+  box-shadow: 3px 3px 0px var(--sage);
+}
+
+.reference-clear-btn:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0px var(--sage);
+}
+
+/* -- Reversible Toast Notification -- */
+.toast-notification {
+position: fixed;
+bottom: 2rem;
+left: 50%;
+transform: translateX(-50%);
+background: var(--ink);
+color: var(--paper);
+padding: 0.75rem 1.1rem;
+border-radius: var(--radius-sm);
+border: 2px solid var(--ink);
+display: flex;
+align-items: center;
+gap: 1.25rem;
+box-shadow: 3px 3px 0px var(--rust);
+z-index: 9999;
+font-size: 0.85rem;
+font-weight: 500;
+animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+font-family: var(--font-body);
+}
+
+.toast-undo-btn {
+background: transparent;
+border: none;
+color: var(--paper);
+font-weight: 700;
+font-family: var(--font-tag);
+font-size: 0.72rem;
+text-transform: uppercase;
+letter-spacing: 0.04em;
+cursor: pointer;
+padding: 0;
+text-decoration: underline;
+text-underline-offset: 3px;
+opacity: 0.85;
+transition: opacity 0.2s;
+}
+
+.toast-undo-btn:hover {
+opacity: 1;
+}
+
+@keyframes slideUp {
+from { opacity: 0; transform: translate(-50%, 20px); }
+to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+/* -- Moveable Overrides -- */
+.moveable-line { background: transparent !important; }
+.moveable-control {
+background: #2b384a !important;
+border: 2px solid #ffffff !important;
+border-radius: 50% !important;
+box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
+width: 12px !important;
+height: 12px !important;
+margin-top: -6px !important;
+margin-left: -6px !important;
+}
+.moveable-rotation-line {
+background: rgba(43, 56, 74, 0.3) !important;
+height: 24px !important;
+}
+.moveable-rotation-control {
+background: #ffffff !important;
+border: 2px solid #2b384a !important;
+width: 14px !important;
+height: 14px !important;
+margin-top: -7px !important;
+margin-left: -7px !important;
 }
 
 @media (max-width: 768px) {
-
-  .with-result-left,
-  .with-result-right {
-    padding: 1rem;
-  }
+.with-result-left,
+.with-result-right {
+padding: 1rem;
+max-width: 100%;
+position: static;
+}
 }

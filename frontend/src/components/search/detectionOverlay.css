@@ -1,0 +1,185 @@
+.detection-overlay-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  font-family: var(--font-body);
+}
+
+.detection-hint {
+  font-family: var(--font-tag);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--sage);
+  font-weight: 700;
+  margin: 0;
+  align-self: flex-start;
+}
+
+.image-wrapper {
+  position: relative;
+  width: 100%;
+  max-height: 55vh;
+  border: 2px solid var(--ink);
+  overflow: hidden;
+  background-color: var(--card);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.source-image {
+  display: block;
+  max-width: 100%;
+  max-height: 55vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+
+.detection-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  width: 100%;
+  flex-shrink: 0;
+}
+
+.det-btn {
+  flex: 1;
+  min-width: 130px;
+  height: 42px;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  font-family: var(--font-tag);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background-color 0.2s ease, color 0.2s ease;
+  border: 2px solid var(--ink);
+  white-space: nowrap;
+}
+
+.det-btn-primary {
+  background: var(--ink);
+  color: var(--paper);
+  box-shadow: 3px 3px 0px var(--rust);
+}
+.det-btn-primary:hover { transform: translate(-1px, -1px); box-shadow: 4px 4px 0px var(--rust); }
+
+.det-btn-secondary {
+  background: var(--card);
+  color: var(--ink);
+  box-shadow: 3px 3px 0px var(--sage);
+}
+.det-btn-secondary:hover { transform: translate(-1px, -1px); box-shadow: 4px 4px 0px var(--sage); }
+
+.det-btn-ghost {
+  background: transparent;
+  color: var(--ink-soft);
+  border-color: var(--line-strong);
+  box-shadow: none;
+}
+.det-btn-ghost:hover { color: var(--rust-dark); border-color: var(--rust); }
+
+/* --- Bounding box brackets: thinner, proportionally sized, calmer hover --- */
+.bounding-box-brackets {
+  position: absolute;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.corner {
+  position: absolute;
+  width: var(--corner-len, 14px);
+  height: var(--corner-len, 14px);
+  border-color: rgba(255, 255, 255, 0.85);
+  border-style: solid;
+  border-width: 0;
+  transition: border-color 0.2s, transform 0.2s;
+  filter: drop-shadow(0px 1px 2px rgba(0,0,0,0.35));
+}
+
+.top-left {
+  top: -1px;
+  left: -1px;
+  border-top-width: 2px;
+  border-left-width: 2px;
+}
+.top-right {
+  top: -1px;
+  right: -1px;
+  border-top-width: 2px;
+  border-right-width: 2px;
+}
+.bottom-left {
+  bottom: -1px;
+  left: -1px;
+  border-bottom-width: 2px;
+  border-left-width: 2px;
+}
+.bottom-right {
+  bottom: -1px;
+  right: -1px;
+  border-bottom-width: 2px;
+  border-right-width: 2px;
+}
+
+.bounding-box-brackets:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.bounding-box-brackets:hover .corner {
+  border-color: var(--mustard);
+  transform: scale(1.08);
+}
+
+/* --- Scanning State --- */
+.detecting-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(42, 38, 33, 0.05);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  backdrop-filter: blur(1px);
+  z-index: 30;
+  overflow: hidden;
+}
+
+.detecting-overlay .scan-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--rust), transparent);
+  animation: scanSweep 1.8s ease-in-out infinite;
+}
+
+@keyframes scanSweep {
+  0% { top: 0%; }
+  50% { top: 96%; }
+  100% { top: 0%; }
+}
+
+.pulse-text {
+  margin-bottom: 12px;
+  color: var(--paper);
+  background: var(--ink);
+  padding: 6px 14px;
+  font-weight: 700;
+  font-family: var(--font-tag);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+@media screen and (max-width: 480px) {
+  .det-btn { min-width: 100%; }
+}
