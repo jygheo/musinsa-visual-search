@@ -6,8 +6,6 @@ from playwright.sync_api import sync_playwright
 from app.db import get_db_connection
 from app.constants import USER_AGENTS
 
-
-
 CATEGORIES = {
     "001": "Tops",
     "002": "Outerwear",
@@ -15,7 +13,7 @@ CATEGORIES = {
     "100": "Dresses & Skirts",
 }
 
-def run_scraper():
+def run_scraper(target_pages=2):
     conn = get_db_connection()
     cur = conn.cursor()
 
@@ -80,7 +78,6 @@ def run_scraper():
             # Wait for the initial page load to settle
             page.wait_for_timeout(3000) 
             
-            target_pages = 2
             for i in range(target_pages - 1):
                 # Scroll to the very bottom of the page
                 page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
