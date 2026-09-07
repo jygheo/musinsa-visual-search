@@ -8,20 +8,14 @@ from concurrent.futures import ThreadPoolExecutor
 import numpy as np
 import requests
 import torch
-import torch.nn.functional as F
-import torchvision.transforms as transforms
 from PIL import Image
-import cv2
-import gdown
 from psycopg2.extras import DictCursor
 from ultralytics import YOLO
 from transformers import CLIPModel, CLIPProcessor
 
-# Assuming these are available in your local environment
 from swiftshadow.classes import ProxyInterface
 from app.db import get_db_connection
 from app.constants import USER_AGENTS
-from scraper.network import U2NET
 
 
 def get_device():
@@ -53,65 +47,12 @@ SCRAPER_TO_MODEL_MAP = {
     "001": ["top"],
     "002": ["outerwear"],
     "003": ["pants"],
-    "100": ["dress", "skirt"],   # if scraper code represents both
+    "100": ["dress", "skirt"], 
     "004": ["bag"],
     "103": ["footwear"],
     "120": ["headwear"],
     "101": ["accessory"],
 }
-
-class Normalize_image(object):
-    def __init__(self, mean, std):
-        self.mean, self.std = mean, std
-        self.n1 = transforms.Normalize([mean], [std])
-        self.n3 = transforms.Normalize([mean]*3, [std]*3)
-        self.n18 = transforms.Normalize([mean]*18, [std]*18)
-
-    def __call__(self, tensor):
-        if tensor.shape[0] == 1:
-            return self.n1(tensor)
-        if tensor.shape[0] == 3:
-            return self.n3(tensor)
-        if tensor.shape[0] == 18:
-            return self.n18(tensor)
-        raise ValueError(f"Channel size {tensor.shape[0]} not supported.")
-
-
-def apply_transform(img):
-    return transforms.Compose([transforms.ToTensor(), Normalize_image(0.5, 0.5)])(img)
-
-
-CHECKPOINT_URL = "https://drive.google.com/uc?id=11xTBALOeUkyuaK3l60CpkYHLTmv7k3dY"
-CHECKPOINT_PATH = "models/cloth_segm.pth"
-
-
-def download_model():
-    if not os.path.exists(CHECKPOINT_PATH):
-        os.makedirs(os.path.dirname(CHECKPOINT_PATH), exist_ok=True)
-        print("Downloading U²-Net checkpoint...")
-        gdown.download(CHECKPOINT_URL, CHECKPOINT_PATH, quiet=False)
-
-
-def load_u2net(device):
-    download_model()
-    model = U2NET(in_ch=3, out_ch=4)
-    state = torch.load(CHECKPOINT_PATH, map_location='cpu')
-    new_state = {}
-    for k, v in state.items():
-        name = k[7:] if k.startswith('module.') else k
-        new_state[name] = v
-    model.load_state_dict(new_state)
-    model.to(device)
-    model.eval()
-
-    # OPTIMIZATION: Ensure MPS also runs in FP16 to halve memory
-    if device.type in ['cuda', 'mps']:
-        model.half()
-
-    return model
-
-
-u2net = load_u2net(DEVICE)
 
 
 def calculate_iou(box1, box2):
@@ -151,7 +92,6 @@ def consolidate_detections(detections, iou_threshold=0.15, distance_threshold=0.
                         'bbox': {'x': nb[0], 'y': nb[1], 'w': nb[2]-nb[0], 'h': nb[3]-nb[1]},
                         'category': cat,
                         'is_primary': cur['is_primary'] or other['is_primary'],
-                        'polygon': cur.get('polygon', []) + other.get('polygon', [])
                     }
                     items.pop(i)
                     items.append(combined)
@@ -169,54 +109,13 @@ def consolidate_detections(detections, iou_threshold=0.15, distance_threshold=0.
     return final
 
 
-def extract_polygons(mask, img_w, img_h):
-    polygons = []
-    for cls in [1, 2, 3]:
-        binary = (mask == cls).astype(np.uint8)
-        if binary.sum() == 0:
-            continue
-        contours, _ = cv2.findContours(
-            binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        for cnt in contours:
-            if len(cnt) < 3:
-                continue
-            epsilon = 0.002 * cv2.arcLength(cnt, True)
-            approx = cv2.approxPolyDP(cnt, epsilon, True)
-            norm_poly = [(pt[0][0] / img_w, pt[0][1] / img_h) for pt in approx]
-            polygons.append({'points': norm_poly, 'class': cls})
-    return polygons
-
-
-def polygon_bbox(norm_poly):
-    xs = [p[0] for p in norm_poly]
-    ys = [p[1] for p in norm_poly]
-    return [min(xs), min(ys), max(xs), max(ys)]
-
-
-def select_primary_polygons(polygons, primary_yolo_box, iou_thresh=0.15):
-    if primary_yolo_box is not None:
-        chosen = []
-        for poly in polygons:
-            pb = polygon_bbox(poly['points'])
-            if calculate_iou(pb, primary_yolo_box) >= iou_thresh:
-                chosen.append(poly)
-        return chosen
-    else:
-        if not polygons:
-            return []
-        largest = max(polygons, key=lambda p: cv2.contourArea(
-            np.array([[int(x*1000), int(y*1000)] for x, y in p['points']], dtype=np.int32)))
-        return [largest]
-
-
-def post_process_single(product, img, yolo_result, u2net_mask):
+def post_process_single(product, img, yolo_result):
     """CPU-bound post processing extracted from GPU inference loop."""
     width, height = img.size
     scraped_code = product.get('category_code', '002')
     target_yolo_classes = SCRAPER_TO_MODEL_MAP.get(str(scraped_code), [])
 
     boxes = yolo_result.boxes
-    masks = yolo_result.masks
     raw_detections = []
 
     if boxes is not None:
@@ -227,17 +126,10 @@ def post_process_single(product, img, yolo_result, u2net_mask):
                 continue
 
             x1, y1, x2, y2 = box.xyxyn[0].tolist()
-            polygon = []
-            if masks is not None and len(masks.xyn) > i:
-                raw_poly = masks.xyn[i]
-                step = max(1, len(raw_poly) // 20)
-                polygon = raw_poly[::step].tolist()
-
             is_primary = class_name in target_yolo_classes
             raw_detections.append({
                 'raw_box': [x1, y1, x2, y2],
                 'bbox': {'x': x1, 'y': y1, 'w': x2-x1, 'h': y2-y1},
-                'polygon': polygon,
                 'category': class_name,
                 'is_primary': is_primary
             })
@@ -251,38 +143,11 @@ def post_process_single(product, img, yolo_result, u2net_mask):
         detections.append({
             'raw_box': [0.0, 0.0, 1.0, 1.0],
             'bbox': {'x': 0, 'y': 0, 'w': 1, 'h': 1},
-            'polygon': [],
             'category': 'unknown',
             'is_primary': True
         })
 
     primary_det = next((d for d in detections if d['is_primary']), None)
-    primary_yolo_box = primary_det['raw_box'] if primary_det else None
-
-    all_polygons = extract_polygons(u2net_mask, width, height)
-    primary_polys = select_primary_polygons(all_polygons, primary_yolo_box)
-
-    if primary_yolo_box is not None and primary_polys:
-        xs = [pt[0] for poly in primary_polys for pt in poly['points']]
-        ys = [pt[1] for poly in primary_polys for pt in poly['points']]
-        union_box = [min(xs), min(ys), max(xs), max(ys)]
-        area_yolo = (primary_yolo_box[2] - primary_yolo_box[0]) * \
-            (primary_yolo_box[3] - primary_yolo_box[1])
-        area_union = (union_box[2] - union_box[0]) * \
-            (union_box[3] - union_box[1])
-        area_ratio = area_union / area_yolo if area_yolo > 0 else float('inf')
-        x_overlap_left = max(0, primary_yolo_box[0] - union_box[0])
-        x_overlap_right = max(0, union_box[2] - primary_yolo_box[2])
-        y_overlap_top = max(0, primary_yolo_box[1] - union_box[1])
-        y_overlap_bottom = max(0, union_box[3] - primary_yolo_box[3])
-        max_extension = max(x_overlap_left, x_overlap_right,
-                            y_overlap_top, y_overlap_bottom)
-
-        if area_ratio > 1.5 or max_extension > 0.05:
-            if primary_det:
-                primary_det['raw_box'] = [0.0, 0.0, 1.0, 1.0]
-                primary_det['bbox'] = {'x': 0.0, 'y': 0.0, 'w': 1.0, 'h': 1.0}
-                primary_det['polygon'] = [p['points'] for p in primary_polys]
 
     if primary_det:
         b = primary_det['bbox']
@@ -361,33 +226,13 @@ def run_consumer_loop(result_queue, conn, batch_size=16):
 
         yolo_results = yolo_model(images, conf=0.45, verbose=False)
 
-        U2NET_SIZE = 512
-        u2net_masks = []
-
-        for img in images:
-            img_resized = img.resize((U2NET_SIZE, U2NET_SIZE), Image.BICUBIC)
-            tensor = apply_transform(img_resized).unsqueeze(0).to(DEVICE)
-
-            if DEVICE.type in ['cuda', 'mps']:
-                tensor = tensor.half()
-
-            with torch.inference_mode():
-                out = u2net(tensor)[0]
-                out = F.log_softmax(out, dim=1)
-                pred = torch.max(out, dim=1)[1]  # Shape: 1 x 512 x 512
-
-                mask_tensor = pred.unsqueeze(0).float()
-                mask_resized = F.interpolate(
-                    mask_tensor, size=img.size[::-1], mode='nearest').squeeze().long()
-                u2net_masks.append(mask_resized.cpu().numpy())
-
         final_dets = []
         crops = []
         db_products = []
 
         for i, (product, img) in enumerate(valid_items):
             det, cropped = post_process_single(
-                product, img, yolo_results[i], u2net_masks[i])
+                product, img, yolo_results[i])
             if det and cropped:
                 final_dets.append(det)
                 crops.append(cropped)
@@ -416,11 +261,10 @@ def run_consumer_loop(result_queue, conn, batch_size=16):
                         det = final_dets[i]
                         det['embedding'] = embeddings[i].tolist()
                         cur.execute("""
-                            INSERT INTO product_garments (product_id, bbox, polygon, category, is_primary, embedding)
-                            VALUES (%s, %s, %s, %s, %s, %s)
+                            INSERT INTO product_garments (product_id, bbox, category, is_primary, embedding)
+                            VALUES (%s, %s, %s, %s, %s)
                         """, (
-                            product['id'], json.dumps(
-                                det['bbox']), json.dumps(det['polygon']),
+                            product['id'], json.dumps(det['bbox']),
                             det['category'], det['is_primary'], str(
                                 det['embedding'])
                         ))
