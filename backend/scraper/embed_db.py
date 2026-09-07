@@ -47,7 +47,7 @@ SCRAPER_TO_MODEL_MAP = {
     "001": ["top"],
     "002": ["outerwear"],
     "003": ["pants"],
-    "100": ["dress", "skirt"], 
+    "100": ["dress", "skirt"],
     "004": ["bag"],
     "103": ["footwear"],
     "120": ["headwear"],
@@ -110,7 +110,8 @@ def consolidate_detections(detections, iou_threshold=0.15, distance_threshold=0.
 
 
 def post_process_single(product, img, yolo_result):
-    """CPU-bound post processing extracted from GPU inference loop."""
+    """CPU-bound post processing extracted from GPU inference loop.
+    bbox is used here only to crop the image for embedding - it is not persisted."""
     width, height = img.size
     scraped_code = product.get('category_code', '002')
     target_yolo_classes = SCRAPER_TO_MODEL_MAP.get(str(scraped_code), [])
@@ -187,6 +188,7 @@ def log_failure(conn, product_id, image_url, category_code, error_msg):
         except Exception as e:
             print(f"Failed to log error for id {product_id}: {e}")
 
+
 def fetch_image(image_url, proxy_manager, retries=3):
     """Producer-side work only: downloading and downscaling heavy images."""
     for attempt in range(retries):
@@ -210,8 +212,10 @@ def fetch_image(image_url, proxy_manager, retries=3):
             time.sleep(2 ** attempt + random.uniform(0, 1))
     return None, "All retries failed"
 
+
 def run_consumer_loop(result_queue, conn, batch_size=16):
-    """Main thread: YOLO and CLIP run in batches. U2Net runs sequentially to save MPS memory."""
+    """Main thread: YOLO and CLIP run in batches. bbox from YOLO is used only
+    to crop the image before embedding - it is never written to the DB."""
     batch_buffer = []
 
     def flush_batch():
@@ -242,7 +246,7 @@ def run_consumer_loop(result_queue, conn, batch_size=16):
                     conn, product['id'], product['image_url'], product.get('category_code'), "No valid detections found.")
 
         if crops:
-            # batch clip
+            # batch clip on the cropped (bbox-cut) images
             inputs = clip_processor(
                 images=crops, return_tensors="pt", padding=True)
             inputs = {k: v.to(DEVICE) for k, v in inputs.items()}
@@ -254,19 +258,17 @@ def run_consumer_loop(result_queue, conn, batch_size=16):
                     image_features.norm(p=2, dim=-1, keepdim=True)
                 embeddings = image_features.cpu().numpy()
 
-            # --- 5. BATCHED DB INSERT ---
+            # --- BATCHED DB INSERT (bbox intentionally excluded) ---
             with conn.cursor() as cur:
                 try:
                     for i, product in enumerate(db_products):
                         det = final_dets[i]
-                        det['embedding'] = embeddings[i].tolist()
+                        embedding = embeddings[i].tolist()
                         cur.execute("""
-                            INSERT INTO product_garments (product_id, bbox, category, is_primary, embedding)
-                            VALUES (%s, %s, %s, %s, %s)
+                            INSERT INTO product_garments (product_id, category, is_primary, embedding)
+                            VALUES (%s, %s, %s, %s)
                         """, (
-                            product['id'], json.dumps(det['bbox']),
-                            det['category'], det['is_primary'], str(
-                                det['embedding'])
+                            product['id'], det['category'], det['is_primary'], str(embedding)
                         ))
                         cur.execute(
                             "DELETE FROM failed_products WHERE id = %s", (product['id'],))
@@ -275,7 +277,7 @@ def run_consumer_loop(result_queue, conn, batch_size=16):
                     print(f"DB Insert failed for batch: {e}")
                     conn.rollback()
 
-        # --- 6. EXPLICIT MEMORY CLEANUP (Crucial for MPS) ---
+        # --- EXPLICIT MEMORY CLEANUP (Crucial for MPS) ---
         if DEVICE.type == 'cuda':
             torch.cuda.empty_cache()
         elif DEVICE.type == 'mps':
@@ -333,7 +335,6 @@ if __name__ == "__main__":
         batch_size=64
     )
     print("Retrying Failed Products ")
-    # TODO update the failed_products table to have category_code (currently empty so its good)
     update_embeddings_pipeline(
         proxy_manager=proxy_manager,
         table="failed_products",
