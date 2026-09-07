@@ -45,3 +45,8 @@ Thumbs.db
 .cache/
 huggingface/
 .DS_Store
+models/
+viz.py
+viz3.py
+hybrid_viz.py
+*.pt
