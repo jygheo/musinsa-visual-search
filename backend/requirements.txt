@@ -14,3 +14,9 @@ swiftshadow
 ultralytics
 gdown
 cv2
+traceback
+onnxruntime
+optimum[onnxruntime]
+onnxscript
+pip install playwright
+# playwright install chromium
