@@ -5,6 +5,8 @@ from PIL import Image
 from transformers import CLIPProcessor, CLIPModel
 import torch
 import traceback
+from pydantic import BaseModel
+import numpy as np
 
 from app.search import find_sim_products, find_sim_products_by_id
 from app.encoder import encode_image, encode_image_from_url, encode_text, normalize_vector
@@ -118,3 +120,17 @@ async def search_id(garment_id: str = Form(None)):
         traceback.print_exc()
         print("----------------------------\n")
         raise HTTPException(500, f"Search failed: {str(e)}")
+class SearchEmbeddingRequest(BaseModel):
+    embedding: list[float]
+
+@app.post("/search-embedding")
+async def search_embedding(req: SearchEmbeddingRequest):
+    try:
+        emb_array = np.array(req.embedding)
+        
+        return {"results": find_sim_products(query_embedding=emb_array)}
+    except Exception as e:
+        print("\n--- ERROR IN /search-embedding ---")
+        traceback.print_exc()
+        print("----------------------------------\n")
+        raise HTTPException(500, f"Embedding search failed: {str(e)}")
