@@ -18,7 +18,7 @@ def encode_image(image: Image.Image, model, processor) -> np.ndarray:
     inputs = {k: v.to(model.device) for k, v in inputs.items()}
     
     with torch.no_grad():
-        image_embedding = (model.get_image_features(**inputs)).pooler_output
+        image_embedding = (model.get_image_features(**inputs))#.pooler_output
     return normalize_vector(image_embedding.squeeze(0).cpu().numpy())
 
 def encode_image_from_url(image_url: str, model, processor) -> np.ndarray:
