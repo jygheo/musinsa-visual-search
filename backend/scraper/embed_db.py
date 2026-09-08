@@ -110,8 +110,6 @@ def consolidate_detections(detections, iou_threshold=0.15, distance_threshold=0.
 
 
 def post_process_single(product, img, yolo_result):
-    """CPU-bound post processing extracted from GPU inference loop.
-    bbox is used here only to crop the image for embedding - it is not persisted."""
     width, height = img.size
     scraped_code = product.get('category_code', '002')
     target_yolo_classes = SCRAPER_TO_MODEL_MAP.get(str(scraped_code), [])
@@ -189,17 +187,25 @@ def log_failure(conn, product_id, image_url, category_code, error_msg):
             print(f"Failed to log error for id {product_id}: {e}")
 
 
-def fetch_image(image_url, proxy_manager, retries=3):
-    """Producer-side work only: downloading and downscaling heavy images."""
+def fetch_image(image_url, proxy_manager, proxy_lock, retries=3):
+    last_error = None
     for attempt in range(retries):
-        proxy = proxy_manager.get()
-        proxies = {proxy_manager.protocol: proxy} if proxy else None
-        headers = {"User-Agent": random.choice(USER_AGENTS)}
+
+        use_proxy = attempt < retries - 1
         try:
+            proxy = None
+            if use_proxy:
+                with proxy_lock:
+                    proxy = proxy_manager.get()
+            proxies = {proxy_manager.protocol: proxy} if proxy else None
+            headers = {"User-Agent": random.choice(USER_AGENTS)}
+
             response = requests.get(
-                image_url, headers=headers, proxies=proxies, stream=True, timeout=10)
+                image_url, headers=headers, proxies=proxies, stream=True, timeout=15)
             if response.status_code in (403, 404):
-                return None, f"Blocked: {response.status_code}"
+                last_error = f"Blocked: {response.status_code}"
+                time.sleep(2 ** attempt + random.uniform(0, 1))
+                continue
             response.raise_for_status()
 
             img = Image.open(response.raw).convert("RGB")
@@ -208,14 +214,15 @@ def fetch_image(image_url, proxy_manager, retries=3):
                 img.thumbnail((960, 960), Image.BICUBIC)
 
             return img, None
-        except Exception:
+        except Exception as e:
+            last_error = f"{type(e).__name__}: {e}"
+            print(f"  fetch attempt {attempt+1}/{retries} failed for {image_url} "
+                  f"(proxy={'yes' if use_proxy else 'no'}): {last_error}")
             time.sleep(2 ** attempt + random.uniform(0, 1))
-    return None, "All retries failed"
+    return None, last_error or "All retries failed"
 
 
 def run_consumer_loop(result_queue, conn, batch_size=16):
-    """Main thread: YOLO and CLIP run in batches. bbox from YOLO is used only
-    to crop the image before embedding - it is never written to the DB."""
     batch_buffer = []
 
     def flush_batch():
@@ -246,7 +253,7 @@ def run_consumer_loop(result_queue, conn, batch_size=16):
                     conn, product['id'], product['image_url'], product.get('category_code'), "No valid detections found.")
 
         if crops:
-            # batch clip on the cropped (bbox-cut) images
+            # batch clip on the cropped primary-garment region
             inputs = clip_processor(
                 images=crops, return_tensors="pt", padding=True)
             inputs = {k: v.to(DEVICE) for k, v in inputs.items()}
@@ -258,17 +265,16 @@ def run_consumer_loop(result_queue, conn, batch_size=16):
                     image_features.norm(p=2, dim=-1, keepdim=True)
                 embeddings = image_features.cpu().numpy()
 
-            # --- BATCHED DB INSERT (bbox intentionally excluded) ---
             with conn.cursor() as cur:
                 try:
                     for i, product in enumerate(db_products):
                         det = final_dets[i]
                         embedding = embeddings[i].tolist()
                         cur.execute("""
-                            INSERT INTO product_garments (product_id, category, is_primary, embedding)
-                            VALUES (%s, %s, %s, %s)
+                            INSERT INTO product_garments (product_id, category, embedding)
+                            VALUES (%s, %s, %s)
                         """, (
-                            product['id'], det['category'], det['is_primary'], str(embedding)
+                            product['id'], det['category'], str(embedding)
                         ))
                         cur.execute(
                             "DELETE FROM failed_products WHERE id = %s", (product['id'],))
@@ -277,7 +283,6 @@ def run_consumer_loop(result_queue, conn, batch_size=16):
                     print(f"DB Insert failed for batch: {e}")
                     conn.rollback()
 
-        # --- EXPLICIT MEMORY CLEANUP (Crucial for MPS) ---
         if DEVICE.type == 'cuda':
             torch.cuda.empty_cache()
         elif DEVICE.type == 'mps':
@@ -304,11 +309,20 @@ def run_consumer_loop(result_queue, conn, batch_size=16):
 def update_embeddings_pipeline(proxy_manager, table="products", condition="1=1", max_workers=6, batch_size=16):
     conn = get_db_connection()
     result_queue = queue.Queue(
-        maxsize=(max_workers * batch_size))  # buffer generously
+        maxsize=(max_workers * batch_size)) 
+
+    # serialize swiftshadow ProxyInterface access.
+    proxy_lock = threading.Lock()
 
     def worker(product):
-        img, error = fetch_image(product['image_url'], proxy_manager)
-        result_queue.put((product, img, error))
+        try:
+            img, error = fetch_image(
+                product['image_url'], proxy_manager, proxy_lock)
+            result_queue.put((product, img, error))
+        except Exception as e:
+            err = f"Unhandled worker error: {type(e).__name__}: {e}"
+            print(f"  worker crashed for {product.get('id')}: {err}")
+            result_queue.put((product, None, err))
 
     def submitter():
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
