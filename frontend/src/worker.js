@@ -37,8 +37,6 @@ self.fetch = async (...args) => {
             // Disable built‑in resize/crop (we'll do it manually)
             config.do_resize = false;
             config.do_center_crop = false;
-
-            console.log('[CONFIG PATCH] Rewrote preprocessor_config.json:', config);
             return new Response(JSON.stringify(config), {
                 status: 200,
                 headers: { 'content-type': 'application/json' }
@@ -65,7 +63,6 @@ self.fetch = async (...args) => {
     if (self.caches) {
         const keys = await self.caches.keys();
         if (keys.length) {
-            console.log('[CACHE PURGE] Deleting cache stores:', keys);
             await Promise.all(keys.map(k => self.caches.delete(k)));
         }
     }

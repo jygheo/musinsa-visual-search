@@ -296,9 +296,6 @@ const getSearchResultsUrl = async (url) => {
         ef_search: 64 
       });
 
-      // ADD THIS LOG to verify what Supabase is doing
-      console.log("Supabase RPC Response:", { data, error });
-
       if (error) {
         console.error('Supabase search error:', error);
         
@@ -362,8 +359,6 @@ const getSearchResultsUrl = async (url) => {
         ef_search: 64 
       });
 
-      // ADD THIS LOG to verify what Supabase is doing
-      console.log("Supabase RPC Response:", { data, error });
 
       if (error) {
         console.error('Supabase search error:', error);
@@ -449,8 +444,6 @@ const handleFindSimilar = async (garmentId, url) => {
         top_k: 20,
         ef_search: 200
       });
-
-      console.log("Supabase Search-by-ID Response:", { data, error });
 
       if (error) {
         console.error('Supabase search-id error:', error);
