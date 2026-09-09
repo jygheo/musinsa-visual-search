@@ -176,14 +176,11 @@ self.addEventListener('message', async (event) => {
 
     if (type === 'LOAD_MODELS') {
         try {
-            // ---- Load CLIP from Hugging Face ----
             if (!clipProcessor || !clipVisionModel) {
                 self.postMessage({ type: 'STATUS', status: 'loading', message: 'Loading FashionCLIP vision model...' });
 
-                // Directly point to the repo (finds root config.json & preprocessor_config.json)
                 clipProcessor = await AutoProcessor.from_pretrained(HF_REPO);
                 
-                // Automatically looks inside /onnx/ for the ONNX file
                 clipVisionModel = await CLIPVisionModelWithProjection.from_pretrained(HF_REPO, {
                     quantized: true,
                 });
@@ -191,7 +188,6 @@ self.addEventListener('message', async (event) => {
                 self.postMessage({ type: 'STATUS', status: 'ready', message: 'CLIP loaded successfully!' });
             }
 
-            // ---- Load YOLO directly from Hugging Face CDN ----
             if (!yoloSession) {
                 self.postMessage({ type: 'STATUS', status: 'loading', message: 'Loading YOLOv8...' });
 

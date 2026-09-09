@@ -26,7 +26,7 @@ export default function Canvas({ wardrobe, setWardrobe }) {
   return (
     <div className="canvas-workspace">
       
-      {wardrobe.length === 0 && (
+      {/* {wardrobe.length === 0 && (
         <div className="empty-canvas-state">
           <div className="empty-canvas-text">
             Your board is empty. Search for items or start with a template.
@@ -39,7 +39,7 @@ export default function Canvas({ wardrobe, setWardrobe }) {
             Start with Outfit Template
           </button>
         </div>
-      )}
+      )} */}
 
       {wardrobe.map((item) => (
         <CanvasItem 
