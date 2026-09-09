@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState, useRef } from 'react';
 import './App.css';
 import ImageUpload from './components/search/imageUpload';
 import ImageCrop from './components/search/imageCrop';
-import ResultGrid from './components/results/ResultGrid';
+import ResultGrid from './components/results/resultGrid';
 import Header from './components/header/header';
 import DetectionOverlay from './components/search/detectionOverlay';
 import Canvas from './components/board/Canvas';
