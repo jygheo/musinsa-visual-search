@@ -180,11 +180,11 @@ self.addEventListener('message', async (event) => {
             if (!clipProcessor || !clipVisionModel) {
                 self.postMessage({ type: 'STATUS', status: 'loading', message: 'Loading FashionCLIP vision model...' });
 
-                clipProcessor = await AutoProcessor.from_pretrained(HF_REPO, {
-                    subfolder: 'fashion_clip_vision_only'
-                });
+                // Directly point to the repo (finds root config.json & preprocessor_config.json)
+                clipProcessor = await AutoProcessor.from_pretrained(HF_REPO);
+                
+                // Automatically looks inside /onnx/ for the ONNX file
                 clipVisionModel = await CLIPVisionModelWithProjection.from_pretrained(HF_REPO, {
-                    subfolder: 'fashion_clip_vision_only',
                     quantized: true,
                 });
 
