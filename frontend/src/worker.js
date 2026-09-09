@@ -79,6 +79,9 @@ let clipProcessor = null;
 let clipVisionModel = null;
 let yoloSession = null;
 
+// TODO: Replace with your actual Hugging Face repo in the format 'username/repo-name'
+const HF_REPO = 'hyg444/models-web';
+
 const ready = (async () => {
     const module = await import('@huggingface/transformers');
     env = module.env;
@@ -87,19 +90,23 @@ const ready = (async () => {
     RawImage = module.RawImage;
     Tensor = module.Tensor; // Use HF Tensor class for CLIP
 
-    // Transformers.js config
-    env.allowLocalModels = true;
-    env.allowRemoteModels = false;
-    env.localModelPath = self.location.origin + '/models/';
-    env.useBrowserCache = false;
+    // Enable remote Hugging Face downloads, disable local search
+    env.allowLocalModels = false;
+    env.allowRemoteModels = true;
+    
+    // Enable caching so subsequent loads are instant
+    env.useBrowserCache = true;
     env.useFSCache = false;
-    env.backends.onnx.wasm.wasmPaths = self.location.origin + '/ort/';
+    
+    // Point WASM to the official jsDelivr CDN
+    const ORT_WASM_CDN = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.27.0/dist/';
+    env.backends.onnx.wasm.wasmPaths = ORT_WASM_CDN;
     env.backends.onnx.wasm.numThreads = 1;
 
     // ONNX Runtime Web config (for YOLO)
     ort.env.wasm.numThreads = 1;
     ort.env.wasm.simd = true;
-    ort.env.wasm.wasmPaths = self.location.origin + '/ort/';
+    ort.env.wasm.wasmPaths = ORT_WASM_CDN;
 })();
 
 // ============================================================
@@ -169,26 +176,30 @@ self.addEventListener('message', async (event) => {
 
     if (type === 'LOAD_MODELS') {
         try {
-            // ---- Load CLIP ----
+            // ---- Load CLIP from Hugging Face ----
             if (!clipProcessor || !clipVisionModel) {
                 self.postMessage({ type: 'STATUS', status: 'loading', message: 'Loading FashionCLIP vision model...' });
 
-                clipProcessor = await AutoProcessor.from_pretrained('fashion_clip_vision_only');
-                clipVisionModel = await CLIPVisionModelWithProjection.from_pretrained('fashion_clip_vision_only', {
+                clipProcessor = await AutoProcessor.from_pretrained(HF_REPO, {
+                    subfolder: 'fashion_clip_vision_only'
+                });
+                clipVisionModel = await CLIPVisionModelWithProjection.from_pretrained(HF_REPO, {
+                    subfolder: 'fashion_clip_vision_only',
                     quantized: true,
                 });
 
                 self.postMessage({ type: 'STATUS', status: 'ready', message: 'CLIP loaded successfully!' });
             }
 
-            // ---- Load YOLO ----
+            // ---- Load YOLO directly from Hugging Face CDN ----
             if (!yoloSession) {
                 self.postMessage({ type: 'STATUS', status: 'loading', message: 'Loading YOLOv8...' });
 
-                yoloSession = await ort.InferenceSession.create(
-                    self.location.origin + '/models/yolo_segment_new_int8.onnx',
-                    { executionProviders: ['wasm'] }
-                );
+                const yoloUrl = `https://huggingface.co/${HF_REPO}/resolve/main/yolo_segment_new_int8.onnx`;
+
+                yoloSession = await ort.InferenceSession.create(yoloUrl, { 
+                    executionProviders: ['wasm'] 
+                });
 
                 self.postMessage({ type: 'STATUS', status: 'ready', message: 'YOLO loaded successfully!' });
             }
