@@ -128,7 +128,6 @@ export default function CanvasItem({ item, updateItem, onRemove }) {
           transform: `scaleX(${item.flip_x || 1}) scale(${item.canvas_scale || 1}) rotate(${item.canvas_rotation || 0}deg)`,
           transformOrigin: 'center center',
           cursor: isDragging.current ? 'grabbing' : 'grab',
-          filter: showPopover ? 'drop-shadow(0px 8px 16px rgba(0, 0, 0, 0.35))' : 'drop-shadow(2px 6px 10px rgba(0, 0, 0, 0.25))',
         }}
       >
         <img 
@@ -139,7 +138,7 @@ export default function CanvasItem({ item, updateItem, onRemove }) {
             height: 'auto', 
             display: 'block', 
             clipPath: getClipPathString(item.polygon),
-            borderRadius: item.polygon ? '0' : '12px'
+            borderRadius: item.polygon ? '0' : 'var(--radius-sm)'
           }} 
           draggable={false} 
         />
@@ -148,18 +147,17 @@ export default function CanvasItem({ item, updateItem, onRemove }) {
       {/* 2. The Popover Card (Outside the transform so it doesn't get squished/flipped!) */}
       {showPopover && (
         <div 
-          onPointerDown={(e) => e.stopPropagation()} // Prevent clicking the card from starting a drag
+          onPointerDown={(e) => e.stopPropagation()}
           style={{
             position: 'absolute',
-            left: '170px', // Pushed slightly right of the item
+            left: '170px',
             top: '-20px',
-            backgroundColor: '#ffffff',
+            backgroundColor: 'var(--card)',
             padding: '16px',
-            borderRadius: '16px',
-            boxShadow: '0 12px 32px rgba(0,0,0,0.15)',
+            borderRadius: 'var(--radius-sm)',
             zIndex: 5000,
             width: '220px',
-            fontFamily: 'Inter, sans-serif'
+            fontFamily: 'var(--font-body)'
           }}
         >
           <a
@@ -168,25 +166,21 @@ export default function CanvasItem({ item, updateItem, onRemove }) {
             rel="noreferrer"
             style={{ textDecoration: 'none', color: 'inherit' }}
           >
-            <div style={{ fontWeight: 600, fontSize: '0.9rem', color: '#33312e', marginBottom: '4px' }}>
+            <div style={{ fontFamily: 'var(--font-tag)', fontWeight: 700, fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--ink)', marginBottom: '4px' }}>
               {item.brand_name || 'Brand'}
             </div>
-            <div style={{ fontSize: '0.8rem', color: '#616a75', marginBottom: '12px', lineHeight: '1.4' }}>
+            <div style={{ fontFamily: 'var(--font-body)', fontSize: '0.85rem', color: 'var(--ink-soft)', marginBottom: '12px', lineHeight: '1.4' }}>
               {item.prod_name}
             </div>
           </a>
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px' }}>
-            <div style={{ fontWeight: 600, color: '#bc4749' }}>
+            <div style={{ fontFamily: 'var(--font-body)', fontWeight: 600, color: 'var(--rust-dark)', fontSize: '0.95rem' }}>
               ${item.price}
             </div>
             
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', justifyContent: 'flex-end', width: '120px' }}>
-              <button title="Bring Forward" onClick={() => updateItem(item.prod_num, { z_index: (item.z_index || 10) + 1 })} style={miniBtn}>+Z</button>
-              <button title="Send Backward" onClick={() => updateItem(item.prod_num, { z_index: (item.z_index || 10) - 1 })} style={miniBtn}>-Z</button>
-              <button title="Scale Up" onClick={() => updateItem(item.prod_num, { canvas_scale: (item.canvas_scale || 1) + 0.1 })} style={miniBtn}>+</button>
-              <button title="Scale Down" onClick={() => updateItem(item.prod_num, { canvas_scale: Math.max(0.4, (item.canvas_scale || 1) - 0.1) })} style={miniBtn}>-</button>
-              <button title="Flip Horizontal" onClick={() => updateItem(item.prod_num, { flip_x: (item.flip_x === -1 ? 1 : -1) })} style={{...miniBtn, width: '100%'}}>Flip</button>
+
             </div>
           </div>
         </div>

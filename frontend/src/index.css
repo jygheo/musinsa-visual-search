@@ -17,7 +17,7 @@
   --line-strong: #c7bc9d;
 
   /* -- Type -- */
-  --font-display: 'Fraunces', 'Georgia', serif;
+  --font-display: 'Inter', 'Georgia', serif;
   --font-body: 'Inter', sans-serif;
   --font-tag: 'Space Mono', monospace;
 
@@ -40,7 +40,6 @@ body {
   min-height: 100vh;
   font-family: var(--font-body);
   background-color: var(--paper);
-  background-image: url("https://www.transparenttextures.com/patterns/rice-paper-2.png");
   background-attachment: fixed;
   color: var(--ink);
   -webkit-font-smoothing: antialiased;

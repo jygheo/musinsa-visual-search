@@ -45,3 +45,26 @@ export const getCroppedImgBlob = async (imageElement, crop, fileName = 'cropped.
     );
   });
 };
+
+export const resizeImageBlob = (source, maxDim = 1024, quality = 0.9) => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, maxDim / Math.max(img.naturalWidth, img.naturalHeight));
+      const w = Math.round(img.naturalWidth * scale);
+      const h = Math.round(img.naturalHeight * scale);
+
+      const canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+
+      canvas.toBlob((blob) => {
+        if (!blob) { reject(new Error('resize failed')); return; }
+        resolve(blob);
+      }, 'image/jpeg', quality);
+    };
+    img.onerror = reject;
+    img.src = typeof source === 'string' ? source : URL.createObjectURL(source);
+  });
+};

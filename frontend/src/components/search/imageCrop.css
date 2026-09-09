@@ -29,9 +29,8 @@
   position: relative;
   width: 100%;
   background-color: var(--card);
-  border: 2px solid var(--ink);
+  border: 1.5px solid var(--ink);
   padding: 0;
-  overflow: hidden;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -41,7 +40,10 @@
 
 .crop-wrapper img {
   max-width: 100%;
+  max-height: 55vh;
+  width: auto;
   height: auto;
+  object-fit: contain;
   display: block;
 }
 
@@ -58,9 +60,9 @@
   border-radius: 50%;
 }
 
-.crop-wrapper .close-icon:hover {
+/* .crop-wrapper .close-icon:hover {
   color: var(--rust);
-}
+} */
 
 /* -- Scanning overlay: subtle animated line rather than a dead spinner -- */
 .scan-overlay {
@@ -79,7 +81,7 @@
   position: absolute;
   left: 0;
   right: 0;
-  height: 2px;
+  height: px;
   background: linear-gradient(90deg, transparent, var(--rust), transparent);
   animation: scanSweep 1.8s ease-in-out infinite;
 }
@@ -118,8 +120,7 @@
   text-transform: uppercase;
   letter-spacing: 0.03em;
   cursor: pointer;
-  transition: transform 0.12s ease, box-shadow 0.12s ease, background-color 0.2s ease;
-  border: 2px solid var(--ink);
+  border: 1.5px solid var(--ink);
 }
 
 .crop-btn:disabled {
@@ -130,22 +131,18 @@
 .crop-btn-primary {
   background-color: var(--ink);
   color: var(--paper);
-  box-shadow: 3px 3px 0px var(--rust);
 }
-.crop-btn-primary:hover:not(:disabled) {
+/* .crop-btn-primary:hover:not(:disabled) {
   transform: translate(-1px, -1px);
-  box-shadow: 4px 4px 0px var(--rust);
-}
+} */
 
 .crop-btn-secondary {
   background-color: var(--card);
   color: var(--ink);
-  box-shadow: 3px 3px 0px var(--sage);
 }
-.crop-btn-secondary:hover:not(:disabled) {
+/* .crop-btn-secondary:hover:not(:disabled) {
   transform: translate(-1px, -1px);
-  box-shadow: 4px 4px 0px var(--sage);
-}
+} */
 
 @media screen and (max-width: 768px) {
   .crop-actions { flex-direction: column; }

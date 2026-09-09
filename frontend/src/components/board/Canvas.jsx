@@ -19,30 +19,7 @@ export default function Canvas({ wardrobe, setWardrobe }) {
     const cy = window.innerHeight / 2 - 150;
     
     setWardrobe([
-      {
-        prod_num: 'temp-top',
-        image_url: 'https://placehold.co/300x300/e8e2d8/616a75?text=Top',
-        brand_name: 'Example Brand',
-        prod_name: 'Placeholder Top',
-        price: '45',
-        canvas_x: cx, canvas_y: cy - 100, canvas_scale: 1, canvas_rotation: 0, z_index: 10, flip_x: 1,
-      },
-      {
-        prod_num: 'temp-bottom',
-        image_url: 'https://placehold.co/300x400/e8e2d8/616a75?text=Bottom',
-        brand_name: 'Example Brand',
-        prod_name: 'Placeholder Pants',
-        price: '65',
-        canvas_x: cx, canvas_y: cy + 120, canvas_scale: 1, canvas_rotation: 0, z_index: 9, flip_x: 1,
-      },
-      {
-        prod_num: 'temp-shoes',
-        image_url: 'https://placehold.co/300x200/e8e2d8/616a75?text=Shoes',
-        brand_name: 'Example Brand',
-        prod_name: 'Placeholder Shoes',
-        price: '110',
-        canvas_x: cx, canvas_y: cy + 380, canvas_scale: 1, canvas_rotation: 0, z_index: 8, flip_x: 1,
-      }
+   
     ]);
   };
 

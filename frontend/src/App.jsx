@@ -6,7 +6,8 @@ import ResultGrid from './components/results/ResultGrid';
 import Header from './components/header/header';
 import DetectionOverlay from './components/search/detectionOverlay';
 import Canvas from './components/board/Canvas';
-import { API_BASE } from './config';
+import { supabase } from './supabaseClient';
+import { resizeImageBlob } from './utils/cropCanvas';
 
 function App() {
   const [imageSrc, setImageSrc] = useState('');
@@ -29,6 +30,13 @@ function App() {
   const resultRef = useRef(null);
   const skipUrlSearch = useRef(false);
 
+  // --- Web Worker for on-device embeddings ---
+  const worker = useRef(null);
+  const workerResolvers = useRef({});
+  const [modelStatus, setModelStatus] = useState('unloaded'); // unloaded, loading, ready
+  const [modelProgress, setModelProgress] = useState(0);
+
+  // --- Wardrobe state ---
   const [wardrobe, setWardrobe] = useState(() => {
     const saved = localStorage.getItem('wardrobeItems');
     return saved ? JSON.parse(saved) : [];
@@ -39,12 +47,55 @@ function App() {
     localStorage.setItem('wardrobeItems', JSON.stringify(wardrobe));
   }, [wardrobe]);
 
+  // Initialize worker and start loading models on app launch
+  useEffect(() => {
+    worker.current = new Worker(new URL('./worker.js', import.meta.url), { type: 'module' });
+
+    worker.current.addEventListener('message', (event) => {
+      const { type, status, message, progress, id, error } = event.data;
+
+      if (type === 'STATUS') {
+        setModelStatus(status);
+        if (status === 'loading' && message) console.log(message);
+      } else if (type === 'PROGRESS') {
+        if (progress && progress.progress) setModelProgress(progress.progress);
+      } else if (type === 'RESULT' || type === 'ERROR') {
+        if (id && workerResolvers.current[id]) {
+          workerResolvers.current[id](event.data);
+          delete workerResolvers.current[id];
+        }
+      }
+    });
+
+    // Start loading models in the background immediately
+    worker.current.postMessage({ type: 'LOAD_MODELS' });
+
+    return () => {
+      if (worker.current) worker.current.terminate();
+    };
+  }, []);
+
+  // Helper to call the worker for embedding generation
+  const getEmbeddingFromWorker = (type, payload) => {
+    return new Promise((resolve, reject) => {
+      if (modelStatus !== 'ready') {
+        reject(new Error("Please wait a moment."));
+        return;
+      }
+      const id = Date.now().toString() + Math.random().toString();
+      workerResolvers.current[id] = resolve;
+      worker.current.postMessage({ type, payload, id });
+    });
+  };
+
+  // --- UI helpers ---
   const handleUndoAdd = (prodNum) => {
     setWardrobe(prev => prev.filter(w => w.prod_num !== prodNum));
     setToastMsg(null);
   };
 
-  const handleAddToBoard = (item) => {
+  const handleAddToBoard
+   = (item) => {
     setWardrobe(prev => {
       if (prev.some(w => w.prod_num === item.prod_num)) return prev;
 
@@ -129,6 +180,18 @@ function App() {
     setMode('crop');
   }, [imageSrc, imageUrl]);
 
+  const handleNewImageSrc = useCallback((src) => {
+    setDetections(null);
+    setMode('crop');
+    setImageSrc(src);
+  }, []);
+
+  const handleNewImageUrl = useCallback((url) => {
+    setDetections(null);
+    setMode('crop');
+    setImageUrl(url);
+  }, []);
+
   useEffect(() => {
     if ('scrollRestoration' in window.history) {
       window.history.scrollRestoration = 'manual';
@@ -180,25 +243,24 @@ function App() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  // Auto-detection is now opt-in: triggered from the manual crop screen via
-  // the "Auto-detect items" button, rather than firing automatically on upload.
+  // Auto-detection triggered from the manual crop screen
   const runAutoDetect = useCallback(async () => {
     if (!imageSrc || isDetecting) return;
     setIsDetecting(true);
     try {
       const response = await fetch(imageSrc);
       const blob = await response.blob();
-      const formData = new FormData();
-      formData.append('file', blob);
+      const resizedBlob = await resizeImageBlob(blob, 1024);
+      const objectUrl = URL.createObjectURL(resizedBlob);
 
-      const detectRes = await fetch(`${API_BASE}/detect`, {
-        method: 'POST',
-        body: formData,
-      });
-      if (detectRes.ok) {
-        const data = await detectRes.json();
-        setDetections(data.detections || []);
+      const workerRes = await getEmbeddingFromWorker('DETECT_IMAGE', { image: objectUrl });
+      URL.revokeObjectURL(objectUrl);
+
+      if (workerRes.type === 'RESULT' && workerRes.detections) {
+        setDetections(workerRes.detections);
         setMode('detect');
+      } else if (workerRes.type === 'ERROR') {
+        setToastMsg({ text: 'Detection failed: ' + workerRes.error });
       }
     } catch (error) {
       console.error('Detection error:', error);
@@ -206,7 +268,135 @@ function App() {
       setIsDetecting(false);
     }
   }, [imageSrc, isDetecting]);
+const getSearchResultsUrl = async (url) => {
+    setRateLimit(false);
+    try {
+      let workerRes;
+      try {
+        // Run inference completely on-device
+        workerRes = await getEmbeddingFromWorker('EMBED_IMAGE', { image: url });
+      } catch (err) {
+        setToastMsg({ text: err.message });
+        setSearchRes(null);
+        return 'error';
+      }
 
+      if (workerRes.type === 'ERROR') {
+        console.error("Worker error:", workerRes.error);
+        return 'error';
+      }
+
+      // Call Supabase Postgres function directly
+      const embeddingString = `[${Array.from(workerRes.embedding).join(',')}]`;
+
+      // Call Supabase Postgres function directly
+      const { data, error } = await supabase.rpc('find_sim_products', {
+        query_embedding: embeddingString, // Pass the string instead of the array
+        top_k: 20,
+        ef_search: 64 
+      });
+
+      // ADD THIS LOG to verify what Supabase is doing
+      console.log("Supabase RPC Response:", { data, error });
+
+      if (error) {
+        console.error('Supabase search error:', error);
+        
+        if (error.code === '429') {
+          if (url) setImageUrl('');
+          setRateLimit(true);
+        }
+        return 'error';
+      }
+
+      if (error) {
+        console.error('Supabase search error:', error);
+        
+        // Supabase PostgREST returns a 429 code when API rate limits are hit
+        if (error.code === '429') {
+          if (url) setImageUrl('');
+          setRateLimit(true);
+        }
+        return 'error';
+      }
+
+      // Supabase RPC returns the array of rows directly in `data`
+      return data;
+      
+    } catch (error) {
+      console.error('Error:', error);
+      return 'error';
+    }
+  };
+
+  const getSearchResultsImage = async (croppedBlob) => {
+    setRateLimit(false);
+    try {
+      const resizedBlob = await resizeImageBlob(croppedBlob, 1024);
+      const objectUrl = URL.createObjectURL(resizedBlob);
+      let workerRes;
+      try {
+        workerRes = await getEmbeddingFromWorker('EMBED_IMAGE', { image: objectUrl });
+      } catch (err) {
+        setToastMsg({ text: err.message });
+        URL.revokeObjectURL(objectUrl);
+        setSearchRes(null);
+        return 'error';
+      }
+
+      URL.revokeObjectURL(objectUrl);
+
+      if (workerRes.type === 'ERROR') {
+        console.error("Worker error:", workerRes.error);
+        return 'error';
+      }
+
+      // Call Supabase Postgres function directly
+      // Convert Float32Array directly into the string format pgvector expects
+      const embeddingString = `[${Array.from(workerRes.embedding).join(',')}]`;
+
+      // Call Supabase Postgres function directly
+      const { data, error } = await supabase.rpc('find_sim_products', {
+        query_embedding: embeddingString, // Pass the string instead of the array
+        top_k: 20,
+        ef_search: 64 
+      });
+
+      // ADD THIS LOG to verify what Supabase is doing
+      console.log("Supabase RPC Response:", { data, error });
+
+      if (error) {
+        console.error('Supabase search error:', error);
+        
+        if (error.code === '429') {
+          if (url) setImageUrl('');
+          setRateLimit(true);
+        }
+        return 'error';
+      }
+
+      if (error) {
+        console.error('Supabase search error:', error);
+        
+        if (error.code === '429') {
+          // Assuming `imageSrc` is a state variable in your component
+          URL.revokeObjectURL(imageSrc); 
+          setImageSrc('');
+          setRateLimit(true);
+        }
+        return 'error';
+      }
+
+      // Supabase RPC returns the array of rows directly in `data`
+      return data;
+      
+    } catch (error) {
+      console.error('Error:', error);
+      return 'error';
+    }
+  };
+
+  // Effects that trigger search when crop or URL changes
   useEffect(() => {
     const loadResultsForFile = async () => {
       if (croppedImage) {
@@ -243,42 +433,7 @@ function App() {
     loadResultsForUrl();
   }, [imageUrl, resetImageToCrop]);
 
-  const getSearchResultsUrl = async (url) => {
-    setRateLimit(false);
-    const formData = new FormData();
-    if (url) formData.append('image_url', url);
-    try {
-      const response = await fetch(`${API_BASE}/search-url`, { method: 'POST', body: formData });
-      if (response.status === 429) {
-        if (url) setImageUrl('');
-        return 'error';
-      }
-      const data = await response.json();
-      return data.results;
-    } catch (error) {
-      console.error('Error:', error);
-    }
-  };
-
-  const getSearchResultsImage = async (croppedBlob) => {
-    setRateLimit(false);
-    const formData = new FormData();
-    if (croppedBlob) formData.append('file', croppedBlob);
-    try {
-      const response = await fetch(`${API_BASE}/search-file`, { method: 'POST', body: formData });
-      if (response.status === 429) {
-        URL.revokeObjectURL(imageSrc);
-        setImageSrc('');
-        return 'error';
-      }
-      const data = await response.json();
-      return data.results;
-    } catch (error) {
-      console.error('Error:', error);
-    }
-  };
-
-  const handleFindSimilar = async (garmentId, url) => {
+const handleFindSimilar = async (garmentId, url) => {
     skipUrlSearch.current = true;
     setImageSrc('');
     setCroppedImage(null);
@@ -287,21 +442,30 @@ function App() {
     setRateLimit(false);
     setSearchRes('loading');
 
-    const formData = new FormData();
-    formData.append('garment_id', garmentId);
-
     try {
-      const response = await fetch(`${API_BASE}/search-id`, { method: 'POST', body: formData });
-      if (response.status === 429) {
+      // Call Supabase function that searches directly by target garment UUID
+      const { data, error } = await supabase.rpc('find_sim_products_by_id', {
+        target_garment_id: garmentId,
+        top_k: 20,
+        ef_search: 200
+      });
+
+      console.log("Supabase Search-by-ID Response:", { data, error });
+
+      if (error) {
+        console.error('Supabase search-id error:', error);
+        if (error.code === '429') {
+          setRateLimit(true);
+        }
         setSearchRes("error");
-        setRateLimit(true);
         return;
       }
-      const data = await response.json();
-      commitSearchResult(data.results, { gid: garmentId, url: url });
+
+      commitSearchResult(data, { gid: garmentId, url: url });
       setActiveTab('search');
     } catch (error) {
       console.error('Error:', error);
+      setSearchRes("error");
     }
   };
 
@@ -331,6 +495,18 @@ function App() {
         onGoHome={goHome}
         showHome={true}
       />
+
+      {/* Model loading indicator */}
+      {/* {modelStatus === 'loading' && (
+        <div style={{
+          background: 'rgba(0,0,0,0.8)', color: '#fff', padding: '8px 16px',
+          textAlign: 'center', fontSize: '13px', zIndex: 9999,
+          position: 'fixed', top: '10px', left: '50%', transform: 'translateX(-50%)',
+          borderRadius: '20px', backdropFilter: 'blur(4px)'
+        }}>
+          Downloading ... {Math.round(modelProgress)}%
+        </div>
+      )} */}
 
       {activeTab === 'search' ? (
         <div
@@ -386,11 +562,12 @@ function App() {
                 </button>
               </div>
             ) : (
+
               <ImageUpload
                 imageSrc={imageSrc}
-                setImageSrc={setImageSrc}
+                setImageSrc={handleNewImageSrc}
                 imageUrl={imageUrl}
-                setImageUrl={setImageUrl}
+                setImageUrl={handleNewImageUrl}
                 setCroppedImage={setCroppedImage}
               />
             )}

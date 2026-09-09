@@ -76,7 +76,7 @@ min-width: 0; /* CRITICAL FIX: Prevents CSS Grid blowout inside a flex container
   position: relative;
   width: 100%;
   background-color: var(--card);
-  border: 2px solid var(--ink);
+  border: 1.5px solid var(--ink);
   overflow: hidden;
   display: flex;
   justify-content: center;
@@ -104,17 +104,14 @@ min-width: 0; /* CRITICAL FIX: Prevents CSS Grid blowout inside a flex container
   text-transform: uppercase;
   letter-spacing: 0.03em;
   cursor: pointer;
-  transition: transform 0.12s ease, box-shadow 0.12s ease, background-color 0.2s ease;
-  border: 2px solid var(--ink);
+  border: 1.5px solid var(--ink);
   background-color: var(--card);
   color: var(--ink);
-  box-shadow: 3px 3px 0px var(--sage);
 }
 
-.reference-clear-btn:hover {
+/* .reference-clear-btn:hover {
   transform: translate(-1px, -1px);
-  box-shadow: 4px 4px 0px var(--sage);
-}
+} */
 
 /* -- Reversible Toast Notification -- */
 .toast-notification {
@@ -126,11 +123,10 @@ background: var(--ink);
 color: var(--paper);
 padding: 0.75rem 1.1rem;
 border-radius: var(--radius-sm);
-border: 2px solid var(--ink);
+border: 1px solid var(--ink);
 display: flex;
 align-items: center;
 gap: 1.25rem;
-box-shadow: 3px 3px 0px var(--rust);
 z-index: 9999;
 font-size: 0.85rem;
 font-weight: 500;
@@ -168,9 +164,8 @@ to { opacity: 1; transform: translate(-50%, 0); }
 .moveable-line { background: transparent !important; }
 .moveable-control {
 background: #2b384a !important;
-border: 2px solid #ffffff !important;
+border: 1.5px solid #ffffff !important;
 border-radius: 50% !important;
-box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
 width: 12px !important;
 height: 12px !important;
 margin-top: -6px !important;
@@ -182,7 +177,7 @@ height: 24px !important;
 }
 .moveable-rotation-control {
 background: #ffffff !important;
-border: 2px solid #2b384a !important;
+border: 1px solid #2b384a !important;
 width: 14px !important;
 height: 14px !important;
 margin-top: -7px !important;

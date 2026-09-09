@@ -18,10 +18,6 @@ background-color: var(--card);
 border: 1.5px solid var(--line);
 border-radius: var(--radius-sm);
 padding: 0.85rem;
-box-shadow: 2px 2px 0px var(--line-strong);
-
-/* CRITICAL FIX: Only transition shadow. Do not transition transform. */
-transition: box-shadow 0.15s ease, border-color 0.15s ease;
 
 display: flex;
 flex-direction: column;
@@ -35,12 +31,10 @@ box-sizing: border-box;
 transform: none !important;
 }
 
-.product-card:hover {
-/* Only raises the shadow, zero movement */
+/* .product-card:hover {
 border-color: var(--ink);
-box-shadow: 3px 3px 0px var(--rust);
 transform: none !important;
-}
+} */
 
 .image-container {
 position: relative;
@@ -69,9 +63,9 @@ opacity: 0;
 transition: opacity 0.2s ease;
 }
 
-.product-card:hover .card-actions-overlay {
+/* .product-card:hover .card-actions-overlay {
 opacity: 1;
-}
+} */
 
 .card-action-btn {
 /* Exact identical sizing for both buttons */
@@ -85,21 +79,17 @@ display: flex;
 align-items: center;
 justify-content: center;
 cursor: pointer;
-box-shadow: 2px 2px 0px var(--ink);
-transition: transform 0.12s ease, box-shadow 0.12s ease, color 0.15s ease;
 }
 
-.card-action-btn:hover {
+/* .card-action-btn:hover {
 background: var(--card);
 color: var(--sage-dark);
 transform: translate(-1px, -1px);
-box-shadow: 3px 3px 0px var(--sage);
-}
+} */
 
-.card-action-btn.pin-btn:hover {
+/* .card-action-btn.pin-btn:hover {
 color: var(--rust-dark);
-box-shadow: 3px 3px 0px var(--rust);
-}
+} */
 
 /* -- Typography -- */
 .brand-name {
@@ -165,11 +155,6 @@ background-color: var(--card);
 border: 1.5px solid var(--line);
 border-radius: var(--radius-sm);
 padding: 0.85rem;
-box-shadow: 2px 2px 0px var(--line-strong);
-
-/* CRITICAL FIX: Only transition shadow. Do not transition transform. */
-transition: box-shadow 0.15s ease, border-color 0.15s ease;
-
 display: flex;
 flex-direction: column;
 gap: 0.5rem;
@@ -182,12 +167,11 @@ box-sizing: border-box;
 transform: none !important;
 }
 
-.product-card:hover {
+/* .product-card:hover {
 /* Only raises the shadow, zero movement */
-border-color: var(--ink);
-box-shadow: 3px 3px 0px var(--rust);
+/* border-color: var(--ink);
 transform: none !important;
-}
+} */ */
 
 .image-container {
 position: relative;
@@ -232,21 +216,17 @@ display: flex;
 align-items: center;
 justify-content: center;
 cursor: pointer;
-box-shadow: 2px 2px 0px var(--ink);
-transition: transform 0.12s ease, box-shadow 0.12s ease, color 0.15s ease;
 }
 
-.card-action-btn:hover {
+/* .card-action-btn:hover {
 background: var(--card);
 color: var(--sage-dark);
 transform: translate(-1px, -1px);
-box-shadow: 3px 3px 0px var(--sage);
 }
 
 .card-action-btn.pin-btn:hover {
 color: var(--rust-dark);
-box-shadow: 3px 3px 0px var(--rust);
-}
+} */
 
 /* -- Typography -- */
 .brand-name {

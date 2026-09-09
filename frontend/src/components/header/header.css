@@ -12,7 +12,7 @@
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  border-bottom: 2px solid var(--ink);
+  border-bottom: 1.5px solid var(--ink);
   background: rgba(251, 246, 236, 0.94);
   backdrop-filter: blur(4px);
   position: sticky;
@@ -73,7 +73,7 @@
   font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.16em;
-  color: var(--sage);
+  color: var(--ink);
   font-weight: 700;
   margin: 0 0 0.75rem;
 }
@@ -131,25 +131,21 @@
   height: 38px;
   border-radius: var(--radius-sm);
   background: var(--card);
-  border: 2px solid var(--ink);
+  border: 1.5px solid var(--ink);
   color: var(--ink);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 3px 3px 0px var(--ink);
-  transition: transform 0.12s ease, box-shadow 0.12s ease, color 0.2s ease;
 }
 
-.home-btn:hover {
+/* .home-btn:hover {
   transform: translate(-2px, -2px);
-  box-shadow: 5px 5px 0px var(--sage);
   color: var(--sage-dark);
-}
+} */
 
 .home-btn:active {
   transform: translate(1px, 1px);
-  box-shadow: 1px 1px 0px var(--ink);
 }
 
 .hero-section.collapsed .home-btn {
@@ -157,11 +153,10 @@
   height: 32px;
 }
 
-/* Tag-chip style button: flat, sharp-ish corners, hard offset shadow */
 .board-toggle-btn {
   position: relative;
   background: var(--card);
-  border: 2px solid var(--ink);
+  border: 1.5px solid var(--ink);
   border-radius: var(--radius-sm);
   padding: 7px 14px;
   cursor: pointer;
@@ -174,19 +169,15 @@
   font-size: 0.78rem;
   text-transform: uppercase;
   letter-spacing: 0.03em;
-  box-shadow: 3px 3px 0px var(--ink);
-  transition: transform 0.12s ease, box-shadow 0.12s ease;
 }
 
-.board-toggle-btn:hover {
+/* .board-toggle-btn:hover {
   transform: translate(-2px, -2px);
-  box-shadow: 5px 5px 0px var(--rust);
   color: var(--rust-dark);
-}
+} */
 
 .board-toggle-btn:active {
   transform: translate(1px, 1px);
-  box-shadow: 1px 1px 0px var(--ink);
 }
 
 .wardrobe-badge {
@@ -204,7 +195,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2px solid var(--paper);
+  border: 1.5px solid var(--paper);
   animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
 

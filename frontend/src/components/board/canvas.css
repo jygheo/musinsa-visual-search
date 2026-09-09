@@ -1,17 +1,13 @@
-/* STREAMING_CHUNK:Defining full-bleed canvas workspace */
+/* Canvas workspace: flat, no texture */
 .canvas-workspace {
   width: 100%;
-  min-height: calc(100vh - 80px); /* Account for collapsed header */
-  background-color: #fdfdfc;
-  background-image:
-    url("https://www.transparenttextures.com/patterns/cream-paper.png"),
-    radial-gradient(circle at center, #f4eee6 0%, #e8e2d8 100%);
+  min-height: calc(100vh - 80px);
+  background-color: var(--paper-dim, #f1efea);
   position: relative;
   overflow: hidden;
-  box-shadow: inset 0 4px 16px rgba(0,0,0,0.04);
 }
 
-/* STREAMING_CHUNK:Empty state and template UI */
+/* Empty state */
 .empty-canvas-state {
   position: absolute;
   top: 45%;
@@ -20,52 +16,48 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.5rem;
+  gap: 1.4rem;
   text-align: center;
-  pointer-events: none; /* Let clicks pass through to board */
+  pointer-events: none;
 }
 
 .empty-canvas-text {
-  color: #616a75;
-  font-size: 1.15rem;
+  color: var(--ink-soft, #7a776f);
+  font-size: 0.95rem;
   font-weight: 400;
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-body, 'Inter', sans-serif);
 }
 
 .template-btn {
   pointer-events: auto;
-  background: #4a5d4e;
-  color: white;
+  background: var(--ink, #1b1b1a);
+  color: var(--paper, #faf9f6);
   border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 30px;
+  padding: 0.7rem 1.4rem;
+  border-radius: var(--radius-sm, 8px);
   font-weight: 500;
-  font-size: 0.95rem;
+  font-size: 0.88rem;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(74, 93, 78, 0.2);
-  transition: all 0.2s ease;
+  transition: opacity 0.15s ease;
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
 .template-btn:hover {
-  background: #3b4a3e;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(74, 93, 78, 0.3);
+  opacity: 0.85;
 }
 
-/* STREAMING_CHUNK:Lightweight hover cards */
+/* Hover cards for canvas items */
 .canvas-hover-card {
   position: absolute;
   bottom: -40px;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(4px);
+  background: var(--card, #fff);
+  border: 1px solid var(--line, #e7e4dc);
   padding: 6px 12px;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  border-radius: var(--radius-sm, 8px);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -76,15 +68,15 @@
   transition: opacity 0.2s ease, bottom 0.2s ease;
 }
 
-.canvas-item-wrapper:hover .canvas-hover-card {
+/* .canvas-item-wrapper:hover .canvas-hover-card {
   opacity: 1;
   bottom: -45px;
-}
+} */
 
-.hover-brand { font-size: 0.75rem; font-weight: 600; color: #33312e; }
-.hover-price { font-size: 0.8rem; font-weight: 600; color: #bc4749; }
+.hover-brand { font-size: 0.75rem; font-weight: 600; color: var(--ink, #1b1b1a); }
+.hover-price { font-size: 0.8rem; font-weight: 500; color: var(--ink-soft, #7a776f); }
 
-/* STREAMING_CHUNK:Refined Moveable Controls (Hide by default) */
+/* Moveable controls */
 .moveable-control-box {
   display: none !important;
 }
@@ -93,35 +85,33 @@
   display: block !important;
 }
 
-/* STREAMING_CHUNK:Black Hole Trash Zone */
+/* Trash zone */
 .trash-zone {
   position: absolute;
   bottom: 2rem;
   right: 2rem;
-  width: 64px;
-  height: 64px;
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
-  background: rgba(253, 253, 252, 0.8);
-  border: 2px dashed #d1ccbf;
+  border: 1.5px solid var(--ink);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: all 0.2s ease;
   z-index: 4000;
-  color: #a39e93;
+  color: var(--ink);
 }
 
 .trash-zone.trash-active {
-  background: #bc4749;
-  border-color: #bc4749;
+  background: var(--error, #a6402f);
+  border-color: var(--error, #a6402f);
   color: white;
-  transform: scale(1.15);
-  box-shadow: 0 8px 24px rgba(188, 71, 73, 0.3);
+  transform: scale(1.08);
 }
 
 .sucked-into-black-hole {
   transform: scale(0) !important;
   opacity: 0 !important;
-  transition: transform 0.4s cubic-bezier(0.55, 0.085, 0.68, 0.53), opacity 0.4s ease !important;
+  transition: transform 0.3s ease, opacity 0.3s ease !important;
   pointer-events: none;
 }
